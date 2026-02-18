@@ -1,0 +1,8 @@
+{
+  "name": "Home of Electronics",
+  "description": "A premium, high-tech e-commerce platform for electronic enthusiasts, featuring an integrated AI shopping assistant powered by Gemini.",
+  "requestFramePermissions": [
+    "camera",
+    "microphone"
+  ]
+}
