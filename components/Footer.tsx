@@ -1,6 +1,7 @@
 
 import React from 'react';
 import { CONTACT_INFO, SUPPLIERS } from '../constants';
+import { Facebook, Instagram, Mail, MessageSquare } from 'lucide-react';
 
 const Footer: React.FC = () => {
   return (
@@ -30,11 +31,18 @@ const Footer: React.FC = () => {
               Your premier destination for the world's most innovative electronics. We bridge the gap between imagination and reality with cutting-edge tech in Rwanda.
             </p>
             <div className="flex gap-4">
-              {['FB', 'IG', 'WA'].map(social => (
-                <div key={social} className="w-12 h-12 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center hover:bg-cyan-500 hover:text-slate-950 hover:border-cyan-500 transition-all cursor-pointer group">
-                  <span className="text-xs font-black group-hover:scale-110 transition-transform">{social}</span>
-                </div>
-              ))}
+              <a href="#" className="w-12 h-12 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center hover:bg-cyan-500 hover:text-slate-950 hover:border-cyan-500 transition-all cursor-pointer group">
+                <Facebook size={20} className="group-hover:scale-110 transition-transform" />
+              </a>
+              <a href="#" className="w-12 h-12 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center hover:bg-cyan-500 hover:text-slate-950 hover:border-cyan-500 transition-all cursor-pointer group">
+                <Instagram size={20} className="group-hover:scale-110 transition-transform" />
+              </a>
+              <a href={`https://wa.me/${CONTACT_INFO.phone.replace(/\s+/g, '')}`} className="w-12 h-12 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center hover:bg-cyan-500 hover:text-slate-950 hover:border-cyan-500 transition-all cursor-pointer group">
+                <MessageSquare size={20} className="group-hover:scale-110 transition-transform" />
+              </a>
+              <a href={`mailto:${CONTACT_INFO.email}`} className="w-12 h-12 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center hover:bg-cyan-500 hover:text-slate-950 hover:border-cyan-500 transition-all cursor-pointer group" title="Email us via Google">
+                <Mail size={20} className="group-hover:scale-110 transition-transform" />
+              </a>
             </div>
           </div>
 
