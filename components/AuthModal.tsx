@@ -49,38 +49,38 @@ const AuthModal: React.FC<Props> = ({ isOpen, onClose, onLogin }) => {
         <form onSubmit={handleSubmit} className="p-10 space-y-8">
           <div className="space-y-6">
             {error && <p className="text-red-500 text-[10px] font-black uppercase tracking-widest text-center">{error}</p>}
-            
+
             <div className="space-y-4">
                <div className="relative group">
                   <div className="absolute inset-y-0 left-5 flex items-center pointer-events-none text-slate-400 group-focus-within:text-cyan-500 transition-colors">
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
                   </div>
-                  <input 
-                    type="email" 
+                  <input
+                    type="email"
                     required
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    placeholder="Email Identifier" 
-                    className="w-full bg-slate-50 border border-slate-100 rounded-2xl pl-12 pr-6 py-4 text-sm focus:outline-none focus:ring-4 focus:ring-cyan-500/10 transition-all font-bold placeholder:text-slate-400" 
+                    placeholder="Email Identifier"
+                    className="w-full bg-slate-50 border border-slate-100 rounded-2xl pl-12 pr-6 py-4 text-sm focus:outline-none focus:ring-4 focus:ring-cyan-500/10 transition-all font-bold placeholder:text-slate-400"
                   />
                </div>
                <div className="relative group">
                   <div className="absolute inset-y-0 left-5 flex items-center pointer-events-none text-slate-400 group-focus-within:text-cyan-500 transition-colors">
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
                   </div>
-                  <input 
-                    type="password" 
+                  <input
+                    type="password"
                     required
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    placeholder="Access Token" 
-                    className="w-full bg-slate-50 border border-slate-100 rounded-2xl pl-12 pr-6 py-4 text-sm focus:outline-none focus:ring-4 focus:ring-cyan-500/10 transition-all font-bold placeholder:text-slate-400" 
+                    placeholder="Access Token"
+                    className="w-full bg-slate-50 border border-slate-100 rounded-2xl pl-12 pr-6 py-4 text-sm focus:outline-none focus:ring-4 focus:ring-cyan-500/10 transition-all font-bold placeholder:text-slate-400"
                   />
                </div>
             </div>
           </div>
 
-          <button 
+          <button
             type="submit"
             className="w-full bg-slate-900 hover:bg-slate-800 text-white py-5 rounded-2xl font-black text-xs tracking-[0.2em] transition-all shadow-xl active:scale-95 uppercase flex items-center justify-center gap-3"
           >
@@ -94,7 +94,7 @@ const AuthModal: React.FC<Props> = ({ isOpen, onClose, onLogin }) => {
               <span className="text-[9px] font-black text-slate-300 uppercase tracking-[0.3em]">Social Link Protocols</span>
               <div className="flex-1 h-px bg-slate-100" />
             </div>
-            
+
             <div className="grid grid-cols-3 gap-4">
               {/* Google */}
               <button type="button" className="h-14 bg-slate-50 rounded-2xl flex items-center justify-center hover:bg-white border border-slate-100 transition-all hover:shadow-md hover:-translate-y-1 group">
@@ -128,7 +128,7 @@ const AuthModal: React.FC<Props> = ({ isOpen, onClose, onLogin }) => {
           </div>
 
           <div className="text-center pt-2">
-            <button 
+            <button
               type="button"
               onClick={() => setIsLogin(!isLogin)}
               className="text-slate-400 text-[10px] font-black uppercase tracking-[0.3em] hover:text-cyan-600 transition-colors"
@@ -139,6 +139,16 @@ const AuthModal: React.FC<Props> = ({ isOpen, onClose, onLogin }) => {
         </form>
       </div>
     </div>
+    // Inside the modal container, after the header or in the header
+<div className="relative w-full max-w-md bg-white rounded-[3rem] overflow-hidden shadow-2xl animate-in fade-in zoom-in duration-500">
+  <button
+    onClick={onClose}
+    className="absolute top-6 right-6 z-20 w-10 h-10 bg-slate-200/50 backdrop-blur-sm rounded-full flex items-center justify-center text-slate-600 hover:bg-cyan-500 hover:text-white transition-colors"
+  >
+    <X size={20} />
+  </button>
+  {/* rest of modal */}
+</div>
   );
 };
 
