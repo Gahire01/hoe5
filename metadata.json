@@ -1,6 +1,6 @@
 {
   "name": "Home of Electronics",
-  "description": "A premium, high-tech e-commerce platform for electronic enthusiasts, featuring an integrated AI shopping assistant powered by Gemini.",
+  "description": "Rwanda's premier premium e-commerce platform for high-end electronics, featuring AI-powered shopping assistance and local payment integrations.",
   "requestFramePermissions": [
     "camera",
     "microphone"

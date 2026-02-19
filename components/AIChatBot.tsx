@@ -97,9 +97,12 @@ const AIChatBot: React.FC = () => {
 
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="w-16 h-16 bg-slate-950 hover:bg-cyan-500 text-white hover:text-slate-950 rounded-[1.5rem] shadow-2xl flex items-center justify-center transition-all hover:scale-110 active:scale-90 group border border-white/5"
+        className="w-16 h-16 bg-cyan-500 hover:bg-slate-950 text-slate-950 hover:text-cyan-400 rounded-[1.5rem] shadow-2xl flex items-center justify-center transition-all hover:scale-110 active:scale-90 group border border-white/5"
       >
-        <span className="text-2xl group-hover:rotate-12 transition-transform">🤖</span>
+        <div className="relative">
+          <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="group-hover:rotate-12 transition-transform"><path d="M12 8V4H8"/><rect width="16" height="12" x="4" y="8" rx="2"/><path d="M2 14h2"/><path d="M20 14h2"/><path d="M15 13v2"/><path d="M9 13v2"/></svg>
+          <div className="absolute -top-1 -right-1 w-3 h-3 bg-emerald-500 rounded-full border-2 border-white animate-pulse" />
+        </div>
       </button>
     </div>
   );

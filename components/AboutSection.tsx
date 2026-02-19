@@ -40,17 +40,47 @@ const AboutSection: React.FC = () => {
         </div>
       </div>
 
-      <div className="mt-24 rounded-[3rem] overflow-hidden h-80 relative group">
-        <img 
-          src="https://images.unsplash.com/photo-1451187534959-5356ed564bb7?auto=format&fit=crop&q=80&w=1200" 
-          alt="Tech Future" 
-          className="w-full h-full object-cover transition-transform duration-[5000ms] group-hover:scale-110"
-        />
-        <div className="absolute inset-0 bg-slate-950/60 backdrop-blur-[2px] flex items-center justify-center">
-           <div className="text-center space-y-4">
-              <p className="text-cyan-400 text-xs font-black uppercase tracking-[0.5em]">Global Infrastructure</p>
-              <h4 className="text-white text-3xl font-black tracking-tighter">Connected To Every Tech Hub.</h4>
-           </div>
+      <div className="mt-24 grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+        <div className="space-y-8">
+          <div className="flex items-center gap-4">
+            <div className="w-12 h-12 bg-cyan-500 rounded-2xl flex items-center justify-center text-slate-950 shadow-lg">
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
+            </div>
+            <div>
+              <h4 className="text-xl font-black text-slate-950 tracking-tight">Visit Our Store</h4>
+              <p className="text-slate-500 text-sm font-medium">Around Makuza Peace Plaza, Kigali, Rwanda</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-4">
+            <div className="w-12 h-12 bg-slate-900 rounded-2xl flex items-center justify-center text-cyan-400 shadow-lg">
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+            </div>
+            <div>
+              <h4 className="text-xl font-black text-slate-950 tracking-tight">Call For Support</h4>
+              <p className="text-slate-500 text-sm font-medium">+250 780 615 795</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-4">
+            <div className="w-12 h-12 bg-slate-900 rounded-2xl flex items-center justify-center text-cyan-400 shadow-lg">
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
+            </div>
+            <div>
+              <h4 className="text-xl font-black text-slate-950 tracking-tight">Email Us</h4>
+              <p className="text-slate-500 text-sm font-medium">homeofelectronics20@gmail.com</p>
+            </div>
+          </div>
+        </div>
+        <div className="rounded-[3rem] overflow-hidden h-[400px] shadow-2xl border-8 border-slate-50 relative group">
+          <iframe 
+            src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3987.503463665392!2d30.0594386!3d-1.9441112!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x19dca42978059047%3A0x6281096752398162!2sMakuza%20Peace%20Plaza!5e0!3m2!1sen!2srw!4v1700000000000!5m2!1sen!2srw" 
+            width="100%" 
+            height="100%" 
+            style={{ border: 0 }} 
+            allowFullScreen={true} 
+            loading="lazy" 
+            referrerPolicy="no-referrer-when-downgrade"
+            className="grayscale group-hover:grayscale-0 transition-all duration-700"
+          ></iframe>
         </div>
       </div>
     </section>

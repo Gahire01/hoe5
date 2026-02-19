@@ -10,11 +10,13 @@ You are the "Home of Electronics" Principal Tech Consultant.
 Your tone is sophisticated, expert, and efficient.
 
 Role Responsibilities:
-1. Provide deep technical insights on the following inventory: ${JSON.stringify(PRODUCTS.map(p => ({ name: p.name, category: p.category, price: p.price })), null, 2)}
+1. Provide deep technical insights on the following inventory: ${JSON.stringify(PRODUCTS.map(p => ({ name: p.name, category: p.category, price: p.price, specs: p.specs })), null, 2)}
 2. Explain the benefits of M3 architecture, sensor sizes in cameras, and high-impedance audio.
 3. Suggest perfect ecosystem pairings (e.g., matching a MacBook with high-end headphones).
 4. Guide the user through the checkout via WhatsApp feature if they seem ready to buy.
 5. Currency: Rwandan Franc (Rwf).
+6. Location: Around Makuza Peace plaza, Kigali, Rwanda.
+7. Payment: Momo Pay, Airtel Money, Cash, Visa/Mastercard.
 
 Style Guide:
 - Use bullet points for comparisons.
@@ -37,11 +39,25 @@ export async function getAIResponse(userPrompt: string, chatHistory: { role: 'us
         topP: 0.9,
       }
     });
-
-    // Fix: Access the .text property directly instead of calling it as a method
     return response.text;
   } catch (error) {
     console.error("AI Node Failure:", error);
     return "Protocol Error: Unable to sync with the Tech Core. Please retry connection.";
+  }
+}
+
+export async function getProductSuggestion(productName: string, specs: any) {
+  try {
+    const prompt = `As a tech expert, briefly suggest why someone should buy the ${productName} based on these specs: ${JSON.stringify(specs)}. Focus on the "purpose" (e.g., for gaming, professional work, or daily use). Keep it under 40 words.`;
+    const response = await ai.models.generateContent({
+      model: 'gemini-3-flash-preview',
+      contents: [{ role: 'user', parts: [{ text: prompt }] }],
+      config: {
+        temperature: 0.7,
+      }
+    });
+    return response.text;
+  } catch (error) {
+    return "This device is a top-tier choice for your digital lifestyle.";
   }
 }

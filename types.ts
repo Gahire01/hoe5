@@ -27,6 +27,16 @@ export interface CartItem extends Product {
   quantity: number;
 }
 
+export interface Supplier {
+  name: string;
+  logo: string;
+}
+
+export interface PaymentMethod {
+  name: string;
+  icon: string;
+}
+
 export interface Category {
   id: string;
   name: string;

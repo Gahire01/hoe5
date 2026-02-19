@@ -1,6 +1,7 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Product } from '../types';
+import { getProductSuggestion } from '../services/geminiService';
 
 interface Props {
   product: Product;
@@ -10,6 +11,20 @@ interface Props {
 }
 
 const ProductCard: React.FC<Props> = ({ product, onAddToCart, isComparing, onToggleCompare }) => {
+  const [aiInsight, setAiInsight] = useState<string | null>(null);
+  const [isLoadingAi, setIsLoadingAi] = useState(false);
+
+  const handleGetAiInsight = async () => {
+    if (aiInsight) {
+      setAiInsight(null);
+      return;
+    }
+    setIsLoadingAi(true);
+    const suggestion = await getProductSuggestion(product.name, product.specs);
+    setAiInsight(suggestion || "Highly recommended for professional use.");
+    setIsLoadingAi(false);
+  };
+
   return (
     <div className={`group bg-white rounded-[3rem] border transition-all duration-700 relative flex flex-col h-full ${isComparing ? 'border-cyan-500 shadow-2xl scale-[1.02]' : 'border-slate-100 shadow-sm hover:shadow-2xl'}`}>
       {/* Badges */}
@@ -34,8 +49,16 @@ const ProductCard: React.FC<Props> = ({ product, onAddToCart, isComparing, onTog
         >
           <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M16 3h5v5"/><path d="M8 3H3v5"/><path d="M21 16v5h-5"/><path d="M3 16v5h5"/><path d="M10 8H8v4h4v-2"/><path d="M16 14h-2v4h4v-2"/></svg>
         </button>
-        <button className="w-12 h-12 bg-white/10 backdrop-blur-xl border border-white/20 rounded-2xl text-white hover:bg-cyan-500 hover:text-slate-950 transition-all shadow-xl opacity-0 group-hover:opacity-100 translate-y-2 group-hover:translate-y-0 duration-500 flex items-center justify-center">
-          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg>
+        <button 
+          onClick={handleGetAiInsight}
+          className={`w-12 h-12 ${aiInsight ? 'bg-cyan-500 text-slate-950' : 'bg-white/10 text-white'} backdrop-blur-xl border border-white/20 rounded-2xl hover:bg-cyan-500 hover:text-slate-950 transition-all shadow-xl opacity-0 group-hover:opacity-100 translate-y-2 group-hover:translate-y-0 duration-500 flex items-center justify-center`}
+          title="AI Suggestion"
+        >
+          {isLoadingAi ? (
+            <div className="w-5 h-5 border-2 border-slate-950 border-t-transparent rounded-full animate-spin" />
+          ) : (
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2a10 10 0 1 0 10 10H12V2z"/><path d="M12 12L2.1 12.1"/><path d="M12 12l9.9-0.1"/><path d="M12 12l-5.9 8.1"/><path d="M12 12l5.9 8.1"/></svg>
+          )}
         </button>
       </div>
 
@@ -62,6 +85,17 @@ const ProductCard: React.FC<Props> = ({ product, onAddToCart, isComparing, onTog
         <h3 className="text-slate-950 font-black text-xl leading-snug group-hover:text-cyan-600 transition-colors line-clamp-2">
           {product.name}
         </h3>
+
+        {/* AI Insight Overlay */}
+        {aiInsight && (
+          <div className="bg-cyan-50 p-4 rounded-2xl border border-cyan-100 animate-in fade-in slide-in-from-top-2 duration-300">
+            <div className="flex items-center gap-2 mb-2">
+              <span className="text-xs">🤖</span>
+              <span className="text-[9px] font-black text-cyan-700 uppercase tracking-widest">AI Recommendation</span>
+            </div>
+            <p className="text-[11px] text-cyan-900 font-medium leading-relaxed italic">"{aiInsight}"</p>
+          </div>
+        )}
         
         {/* Rating */}
         <div className="flex items-center gap-1.5">
