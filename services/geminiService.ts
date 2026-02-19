@@ -2,8 +2,19 @@
 import { GoogleGenAI } from "@google/genai";
 import { PRODUCTS } from "../constants";
 
-// Fix: Initialize GoogleGenAI instance using the environment variable directly as required by guidelines
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+// Lazy initialization of GoogleGenAI to avoid error when API key is missing
+let aiInstance: GoogleGenAI | null = null;
+
+function getAI() {
+  const apiKey = process.env.API_KEY || process.env.GEMINI_API_KEY;
+  if (!apiKey) {
+    throw new Error("GEMINI_API_KEY is not defined");
+  }
+  if (!aiInstance) {
+    aiInstance = new GoogleGenAI({ apiKey });
+  }
+  return aiInstance;
+}
 
 const SYSTEM_INSTRUCTION = `
 You are the "Home of Electronics" Principal Tech Consultant. 
@@ -27,6 +38,7 @@ Style Guide:
 
 export async function getAIResponse(userPrompt: string, chatHistory: { role: 'user' | 'model', parts: { text: string }[] }[]) {
   try {
+    const ai = getAI();
     const response = await ai.models.generateContent({
       model: 'gemini-3-flash-preview',
       contents: [
@@ -48,6 +60,7 @@ export async function getAIResponse(userPrompt: string, chatHistory: { role: 'us
 
 export async function getProductSuggestion(productName: string, specs: any) {
   try {
+    const ai = getAI();
     const prompt = `As a tech expert, briefly suggest why someone should buy the ${productName} based on these specs: ${JSON.stringify(specs)}. Focus on the "purpose" (e.g., for gaming, professional work, or daily use). Keep it under 40 words.`;
     const response = await ai.models.generateContent({
       model: 'gemini-3-flash-preview',
