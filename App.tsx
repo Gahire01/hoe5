@@ -45,8 +45,8 @@ const App: React.FC = () => {
     localStorage.setItem('inventory', JSON.stringify(allProducts));
   }, [allProducts]);
 
-  const handleLogin = (name: string, role: UserRole) => {
-    const newUser: User = { id: '1', name, email: 'admin@homeofelectronics.com', role };
+  const handleLogin = (name: string, role: UserRole, email: string) => {
+    const newUser: User = { id: '1', name, email, role };
     setUser(newUser);
     localStorage.setItem('user', JSON.stringify(newUser));
     setIsAuthOpen(false);
@@ -88,9 +88,11 @@ const App: React.FC = () => {
   };
 
   const filteredProducts = useMemo(() => {
+    const query = searchQuery.toLowerCase();
     return allProducts.filter(p => 
-      p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      p.category.toLowerCase().includes(searchQuery.toLowerCase())
+      p.name.toLowerCase().includes(query) ||
+      p.category.toLowerCase().includes(query) ||
+      Object.values(p.specs || {}).some(v => String(v).toLowerCase().includes(query))
     );
   }, [allProducts, searchQuery]);
 
@@ -103,7 +105,14 @@ const App: React.FC = () => {
   return (
     <div className="min-h-screen flex flex-col font-sans selection:bg-cyan-100 selection:text-cyan-900 bg-slate-50">
       
-      <Navbar />
+      <Navbar 
+        cartCount={cartCount} 
+        onSearch={setSearchQuery} 
+        onOpenCart={() => setIsCartOpen(true)} 
+        onOpenAuth={() => setIsAuthOpen(true)}
+        user={user}
+        onLogout={handleLogout}
+      />
 
       <main className="flex-1 max-w-7xl mx-auto w-full px-6 py-12 space-y-24">
         

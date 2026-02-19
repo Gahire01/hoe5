@@ -1,18 +1,34 @@
 
 import React, { useState } from 'react';
 import { UserRole } from '../types';
+import { CONTACT_INFO } from '../constants';
 
 interface Props {
   isOpen: boolean;
   onClose: () => void;
-  onLogin: (name: string, role: UserRole) => void;
+  onLogin: (name: string, role: UserRole, email: string) => void;
 }
 
 const AuthModal: React.FC<Props> = ({ isOpen, onClose, onLogin }) => {
   const [isLogin, setIsLogin] = useState(true);
-  const [role, setRole] = useState<UserRole>('user');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
 
   if (!isOpen) return null;
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    setError('');
+
+    if (email === CONTACT_INFO.adminEmail && password === CONTACT_INFO.adminPassword) {
+      onLogin("Admin Specialist", 'admin', email);
+    } else if (email && password) {
+      onLogin(email.split('@')[0], 'user', email);
+    } else {
+      setError('Please provide valid credentials.');
+    }
+  };
 
   return (
     <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
@@ -30,41 +46,42 @@ const AuthModal: React.FC<Props> = ({ isOpen, onClose, onLogin }) => {
           <p className="text-slate-500 text-[10px] mt-4 font-black uppercase tracking-[0.3em] relative z-10">Secured Access Layer</p>
         </div>
 
-        <div className="p-10 space-y-8">
+        <form onSubmit={handleSubmit} className="p-10 space-y-8">
           <div className="space-y-6">
-            <div className="grid grid-cols-2 gap-3 bg-slate-50 p-1.5 rounded-2xl">
-              <button 
-                onClick={() => setRole('user')}
-                className={`py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${role === 'user' ? 'bg-slate-900 text-white shadow-lg' : 'text-slate-400 hover:text-slate-600'}`}
-              >
-                Standard
-              </button>
-              <button 
-                onClick={() => setRole('admin')}
-                className={`py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${role === 'admin' ? 'bg-cyan-500 text-slate-950 shadow-lg' : 'text-slate-400 hover:text-slate-600'}`}
-              >
-                Admin Panel
-              </button>
-            </div>
+            {error && <p className="text-red-500 text-[10px] font-black uppercase tracking-widest text-center">{error}</p>}
             
             <div className="space-y-4">
                <div className="relative group">
                   <div className="absolute inset-y-0 left-5 flex items-center pointer-events-none text-slate-400 group-focus-within:text-cyan-500 transition-colors">
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
                   </div>
-                  <input type="email" placeholder="Email Identifier" className="w-full bg-slate-50 border border-slate-100 rounded-2xl pl-12 pr-6 py-4 text-sm focus:outline-none focus:ring-4 focus:ring-cyan-500/10 transition-all font-bold placeholder:text-slate-400" />
+                  <input 
+                    type="email" 
+                    required
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="Email Identifier" 
+                    className="w-full bg-slate-50 border border-slate-100 rounded-2xl pl-12 pr-6 py-4 text-sm focus:outline-none focus:ring-4 focus:ring-cyan-500/10 transition-all font-bold placeholder:text-slate-400" 
+                  />
                </div>
                <div className="relative group">
                   <div className="absolute inset-y-0 left-5 flex items-center pointer-events-none text-slate-400 group-focus-within:text-cyan-500 transition-colors">
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
                   </div>
-                  <input type="password" placeholder="Access Token" className="w-full bg-slate-50 border border-slate-100 rounded-2xl pl-12 pr-6 py-4 text-sm focus:outline-none focus:ring-4 focus:ring-cyan-500/10 transition-all font-bold placeholder:text-slate-400" />
+                  <input 
+                    type="password" 
+                    required
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder="Access Token" 
+                    className="w-full bg-slate-50 border border-slate-100 rounded-2xl pl-12 pr-6 py-4 text-sm focus:outline-none focus:ring-4 focus:ring-cyan-500/10 transition-all font-bold placeholder:text-slate-400" 
+                  />
                </div>
             </div>
           </div>
 
           <button 
-            onClick={() => onLogin("Tech Specialist", role)}
+            type="submit"
             className="w-full bg-slate-900 hover:bg-slate-800 text-white py-5 rounded-2xl font-black text-xs tracking-[0.2em] transition-all shadow-xl active:scale-95 uppercase flex items-center justify-center gap-3"
           >
             {isLogin ? 'Enter Workspace' : 'Initialize Account'}
@@ -78,9 +95,9 @@ const AuthModal: React.FC<Props> = ({ isOpen, onClose, onLogin }) => {
               <div className="flex-1 h-px bg-slate-100" />
             </div>
             
-            <div className="grid grid-cols-4 gap-4">
+            <div className="grid grid-cols-3 gap-4">
               {/* Google */}
-              <button className="h-14 bg-slate-50 rounded-2xl flex items-center justify-center hover:bg-white border border-slate-100 transition-all hover:shadow-md hover:-translate-y-1 group">
+              <button type="button" className="h-14 bg-slate-50 rounded-2xl flex items-center justify-center hover:bg-white border border-slate-100 transition-all hover:shadow-md hover:-translate-y-1 group">
                 <svg className="w-6 h-6" viewBox="0 0 24 24">
                   <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
                   <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
@@ -89,19 +106,13 @@ const AuthModal: React.FC<Props> = ({ isOpen, onClose, onLogin }) => {
                 </svg>
               </button>
               {/* Facebook */}
-              <button className="h-14 bg-slate-50 rounded-2xl flex items-center justify-center hover:bg-white border border-slate-100 transition-all hover:shadow-md hover:-translate-y-1 group">
+              <button type="button" className="h-14 bg-slate-50 rounded-2xl flex items-center justify-center hover:bg-white border border-slate-100 transition-all hover:shadow-md hover:-translate-y-1 group">
                 <svg className="w-6 h-6" fill="#1877F2" viewBox="0 0 24 24">
                   <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
                 </svg>
               </button>
-              {/* TikTok */}
-              <button className="h-14 bg-slate-50 rounded-2xl flex items-center justify-center hover:bg-white border border-slate-100 transition-all hover:shadow-md hover:-translate-y-1 group">
-                <svg className="w-6 h-6" fill="#000000" viewBox="0 0 24 24">
-                  <path d="M12.525.02c1.31-.02 2.61-.01 3.91-.02.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.17-2.81-.74-3.94-1.67-.14-.11-.27-.22-.4-.34V14.1c.04 2.25-.74 4.52-2.33 6.13-1.66 1.7-4.14 2.51-6.42 2.19-2.36-.29-4.52-1.72-5.63-3.83-1.22-2.23-1.16-5.07.21-7.21 1.11-1.78 3.02-2.92 5.11-3.06v4.04c-.95.07-1.92.48-2.54 1.2-.67.75-.92 1.8-.75 2.76.2 1.05.9 1.99 1.83 2.5 1.05.62 2.39.64 3.44.03.95-.53 1.56-1.53 1.57-2.62V.02z"/>
-                </svg>
-              </button>
               {/* Instagram */}
-              <button className="h-14 bg-slate-50 rounded-2xl flex items-center justify-center hover:bg-white border border-slate-100 transition-all hover:shadow-md hover:-translate-y-1 group">
+              <button type="button" className="h-14 bg-slate-50 rounded-2xl flex items-center justify-center hover:bg-white border border-slate-100 transition-all hover:shadow-md hover:-translate-y-1 group">
                 <svg className="w-6 h-6" viewBox="0 0 24 24">
                   <radialGradient id="rg" r="150%" cx="37%" cy="100%">
                     <stop stopColor="#fed373" offset="0%"/>
@@ -118,13 +129,14 @@ const AuthModal: React.FC<Props> = ({ isOpen, onClose, onLogin }) => {
 
           <div className="text-center pt-2">
             <button 
+              type="button"
               onClick={() => setIsLogin(!isLogin)}
               className="text-slate-400 text-[10px] font-black uppercase tracking-[0.3em] hover:text-cyan-600 transition-colors"
             >
               {isLogin ? "JOIN THE NEXUS NETWORK" : "RETURN TO ACCESS POINT"}
             </button>
           </div>
-        </div>
+        </form>
       </div>
     </div>
   );
