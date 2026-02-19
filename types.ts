@@ -1,4 +1,3 @@
-
 export type UserRole = 'user' | 'admin' | 'guest';
 
 export interface User {
@@ -20,7 +19,7 @@ export interface Product {
   badge?: string;
   isNew?: boolean;
   stock: number;
-  specs?: Record<string, string>;
+  specs?: Record<string, string>; // e.g., { "Processor": "M3", "RAM": "16GB" }
 }
 
 export interface CartItem extends Product {

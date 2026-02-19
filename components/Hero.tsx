@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 
 const SLIDES = [
@@ -38,19 +37,19 @@ const Hero: React.FC = () => {
   return (
     <div className="relative w-full h-[400px] md:h-[600px] rounded-[2rem] md:rounded-[4rem] overflow-hidden bg-slate-900 shadow-2xl group">
       {SLIDES.map((slide, index) => (
-        <div 
+        <div
           key={index}
           className={`absolute inset-0 transition-opacity duration-1000 ease-in-out ${index === current ? 'opacity-100' : 'opacity-0'}`}
         >
-          <div 
+          <div
             className="absolute inset-0 bg-cover bg-center scale-105 transition-transform duration-[8000ms] ease-linear"
-            style={{ 
+            style={{
               backgroundImage: `url('${slide.img}')`,
               transform: index === current ? 'scale(1)' : 'scale(1.05)'
             }}
           />
           <div className={`absolute inset-0 bg-gradient-to-r ${slide.color} via-slate-900/40 to-transparent opacity-90`} />
-          
+
           <div className="relative h-full flex flex-col justify-center px-8 md:px-24 max-w-3xl">
             <span className="inline-block px-4 py-1.5 bg-cyan-500 text-slate-900 text-[10px] font-black uppercase tracking-[0.3em] rounded-full mb-6 animate-bounce">
               {slide.tag}
@@ -75,8 +74,8 @@ const Hero: React.FC = () => {
 
       <div className="absolute bottom-8 md:bottom-12 left-1/2 -translate-x-1/2 md:left-auto md:right-24 flex gap-3 z-10">
         {SLIDES.map((_, i) => (
-          <button 
-            key={i} 
+          <button
+            key={i}
             onClick={() => setCurrent(i)}
             className={`h-1.5 rounded-full transition-all duration-500 ${i === current ? 'w-12 bg-cyan-400' : 'w-4 bg-white/30'}`}
           />

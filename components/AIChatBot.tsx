@@ -1,6 +1,6 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import { getAIResponse } from '../services/geminiService';
+import { Send, Headset, X } from 'lucide-react';
 
 const AIChatBot: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -41,14 +41,16 @@ const AIChatBot: React.FC = () => {
         <div className="mb-6 w-80 md:w-96 h-[550px] bg-white rounded-[2.5rem] shadow-[0_30px_60px_-15px_rgba(0,0,0,0.3)] border border-slate-100 flex flex-col overflow-hidden animate-in slide-in-from-bottom-5 duration-500">
           <div className="bg-slate-950 p-6 flex justify-between items-center text-white border-b border-white/5">
             <div className="flex items-center gap-4">
-              <div className="w-10 h-10 bg-cyan-500 rounded-2xl flex items-center justify-center text-slate-900 shadow-lg">⚡</div>
+              <div className="w-10 h-10 bg-cyan-500 rounded-2xl flex items-center justify-center text-slate-900 shadow-lg">
+                <Headset size={20} />
+              </div>
               <div>
                 <h3 className="font-black text-xs uppercase tracking-widest">Tech Architect AI</h3>
                 <p className="text-[9px] text-cyan-400 font-bold uppercase tracking-widest">Core Status: Active</p>
               </div>
             </div>
             <button onClick={() => setIsOpen(false)} className="text-slate-500 hover:text-white transition-colors">
-              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+              <X size={20} />
             </button>
           </div>
 
@@ -56,8 +58,8 @@ const AIChatBot: React.FC = () => {
             {messages.map((m, i) => (
               <div key={i} className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}>
                 <div className={`max-w-[85%] p-5 rounded-[1.8rem] text-sm leading-relaxed ${
-                  m.role === 'user' 
-                    ? 'bg-slate-900 text-white rounded-tr-none shadow-xl' 
+                  m.role === 'user'
+                    ? 'bg-slate-900 text-white rounded-tr-none shadow-xl'
                     : 'bg-white text-slate-800 border border-slate-100 rounded-tl-none shadow-sm'
                 }`}>
                   {m.text}
@@ -84,12 +86,12 @@ const AIChatBot: React.FC = () => {
               placeholder="Query tech specs..."
               className="flex-1 px-6 py-4 bg-slate-100 rounded-2xl text-xs font-bold focus:outline-none focus:ring-4 focus:ring-cyan-500/10 placeholder:text-slate-400"
             />
-            <button 
+            <button
               onClick={handleSend}
               disabled={isLoading}
               className="bg-cyan-500 text-slate-900 p-4 rounded-2xl hover:bg-cyan-400 transition-all disabled:opacity-50 shadow-xl active:scale-90"
             >
-              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/></svg>
+              <Send size={20} />
             </button>
           </div>
         </div>
@@ -100,7 +102,7 @@ const AIChatBot: React.FC = () => {
         className="w-16 h-16 bg-cyan-500 hover:bg-slate-950 text-slate-950 hover:text-cyan-400 rounded-[1.5rem] shadow-2xl flex items-center justify-center transition-all hover:scale-110 active:scale-90 group border border-white/5"
       >
         <div className="relative">
-          <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="group-hover:rotate-12 transition-transform"><path d="M12 8V4H8"/><rect width="16" height="12" x="4" y="8" rx="2"/><path d="M2 14h2"/><path d="M20 14h2"/><path d="M15 13v2"/><path d="M9 13v2"/></svg>
+          <Headset size={28} className="group-hover:rotate-12 transition-transform" />
           <div className="absolute -top-1 -right-1 w-3 h-3 bg-emerald-500 rounded-full border-2 border-white animate-pulse" />
         </div>
       </button>

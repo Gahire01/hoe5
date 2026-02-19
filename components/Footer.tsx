@@ -1,7 +1,8 @@
-
 import React from 'react';
+import { Link } from 'react-router-dom';
 import { CONTACT_INFO, SUPPLIERS } from '../constants';
-import { Facebook, Instagram, Mail, MessageSquare } from 'lucide-react';
+import { Facebook, Instagram, Mail, MessageCircle, MapPin, Phone, Twitter } from 'lucide-react';
+import PaymentIcons from './PaymentIcons';
 
 const Footer: React.FC = () => {
   return (
@@ -21,7 +22,7 @@ const Footer: React.FC = () => {
           {/* Logo Section */}
           <div className="space-y-8">
             <div className="flex items-center gap-3">
-              <div className="w-12 h-12 bg-cyan-500 rounded-xl flex items-center justify-center text-slate-950 font-black text-2xl shadow-lg">H</div>
+              <img src="/logo.png" alt="Home of Electronics" className="w-12 h-12 object-contain" />
               <div className="leading-tight">
                 <h2 className="text-xl font-black tracking-tighter">HOME OF ELECTRONICS</h2>
                 <p className="text-[10px] text-cyan-400 tracking-[0.3em] uppercase font-bold">The Tech Authority</p>
@@ -37,35 +38,39 @@ const Footer: React.FC = () => {
               <a href="#" className="w-12 h-12 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center hover:bg-cyan-500 hover:text-slate-950 hover:border-cyan-500 transition-all cursor-pointer group">
                 <Instagram size={20} className="group-hover:scale-110 transition-transform" />
               </a>
-              <a href={`https://wa.me/${CONTACT_INFO.phone.replace(/\s+/g, '')}`} className="w-12 h-12 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center hover:bg-cyan-500 hover:text-slate-950 hover:border-cyan-500 transition-all cursor-pointer group">
-                <MessageSquare size={20} className="group-hover:scale-110 transition-transform" />
+              <a href="#" className="w-12 h-12 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center hover:bg-cyan-500 hover:text-slate-950 hover:border-cyan-500 transition-all cursor-pointer group">
+                <Twitter size={20} className="group-hover:scale-110 transition-transform" />
               </a>
-              <a href={`mailto:${CONTACT_INFO.email}`} className="w-12 h-12 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center hover:bg-cyan-500 hover:text-slate-950 hover:border-cyan-500 transition-all cursor-pointer group" title="Email us via Google">
-                <Mail size={20} className="group-hover:scale-110 transition-transform" />
+              <a href="https://tiktok.com/@homeofelectronics" className="w-12 h-12 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center hover:bg-cyan-500 hover:text-slate-950 hover:border-cyan-500 transition-all cursor-pointer group">
+                <span className="text-lg">🎵</span>
+              </a>
+              <a href={`https://wa.me/${CONTACT_INFO.phone.replace(/\s+/g, '')}`} className="w-12 h-12 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center hover:bg-cyan-500 hover:text-slate-950 hover:border-cyan-500 transition-all cursor-pointer group">
+                <MessageCircle size={20} className="group-hover:scale-110 transition-transform" />
               </a>
             </div>
           </div>
 
-          {/* Quick Links */}
+          {/* Quick Shop */}
           <div className="lg:pl-8">
             <h3 className="text-xs font-black mb-8 text-cyan-400 uppercase tracking-widest">Quick Shop</h3>
             <ul className="space-y-4 text-sm text-slate-400 font-bold">
-              {['Latest Smartphones', 'Pro Accessories', 'Watches & Wearables', 'Gaming Setup', 'New Arrivals'].map(link => (
-                <li key={link} className="hover:text-white transition-colors cursor-pointer flex items-center gap-2 group">
-                  <span className="w-1 h-1 bg-cyan-500 group-hover:w-3 transition-all duration-300 rounded-full"></span>
-                  {link}
-                </li>
-              ))}
+              <li><Link to="/products?category=smartphone" className="hover:text-white transition-colors flex items-center gap-2 group"><span className="w-1 h-1 bg-cyan-500 group-hover:w-3 transition-all duration-300 rounded-full"></span>Latest Smartphones</Link></li>
+              <li><Link to="/products?category=accessories" className="hover:text-white transition-colors flex items-center gap-2 group"><span className="w-1 h-1 bg-cyan-500 group-hover:w-3 transition-all duration-300 rounded-full"></span>Pro Accessories</Link></li>
+              <li><Link to="/products?category=watches" className="hover:text-white transition-colors flex items-center gap-2 group"><span className="w-1 h-1 bg-cyan-500 group-hover:w-3 transition-all duration-300 rounded-full"></span>Watches & Wearables</Link></li>
+              <li><Link to="/products?category=gaming" className="hover:text-white transition-colors flex items-center gap-2 group"><span className="w-1 h-1 bg-cyan-500 group-hover:w-3 transition-all duration-300 rounded-full"></span>Gaming Setup</Link></li>
+              <li><Link to="/products?sort=new" className="hover:text-white transition-colors flex items-center gap-2 group"><span className="w-1 h-1 bg-cyan-500 group-hover:w-3 transition-all duration-300 rounded-full"></span>New Arrivals</Link></li>
             </ul>
           </div>
 
-          {/* Privacy & Legal */}
+          {/* Legal Info */}
           <div>
             <h3 className="text-xs font-black mb-8 text-cyan-400 uppercase tracking-widest">Legal Info</h3>
             <ul className="space-y-4 text-sm text-slate-400 font-bold">
-              {['Privacy Policy', 'Terms of Service', 'Refund Policy', 'Shipping Info', 'Affiliate Program'].map(link => (
-                <li key={link} className="hover:text-white transition-colors cursor-pointer">{link}</li>
-              ))}
+              <li><Link to="/privacy" className="hover:text-white transition-colors">Privacy Policy</Link></li>
+              <li><Link to="/terms" className="hover:text-white transition-colors">Terms of Service</Link></li>
+              <li><Link to="/refund" className="hover:text-white transition-colors">Refund Policy</Link></li>
+              <li><Link to="/shipping" className="hover:text-white transition-colors">Shipping Info</Link></li>
+              <li><Link to="/affiliate" className="hover:text-white transition-colors">Affiliate Program</Link></li>
             </ul>
           </div>
 
@@ -74,15 +79,15 @@ const Footer: React.FC = () => {
             <h3 className="text-xs font-black text-cyan-400 uppercase tracking-widest">Contact Us</h3>
             <div className="space-y-5 text-sm text-slate-400 font-medium">
               <p className="flex items-start gap-4">
-                <span className="text-cyan-500 mt-1">📍</span>
+                <MapPin size={18} className="text-cyan-500 shrink-0 mt-1" />
                 {CONTACT_INFO.location}
               </p>
               <p className="flex items-center gap-4">
-                <span className="text-cyan-500">📞</span>
+                <Phone size={18} className="text-cyan-500 shrink-0" />
                 {CONTACT_INFO.phone}
               </p>
               <p className="flex items-center gap-4">
-                <span className="text-cyan-500">✉️</span>
+                <Mail size={18} className="text-cyan-500 shrink-0" />
                 {CONTACT_INFO.email}
               </p>
               <div className="bg-white/5 p-5 rounded-2xl border border-white/10 mt-6">
@@ -93,21 +98,20 @@ const Footer: React.FC = () => {
           </div>
         </div>
 
+        {/* Payment Methods */}
+        <div className="mb-12">
+          <h3 className="text-xs font-black text-cyan-400 uppercase tracking-widest mb-6">We Accept</h3>
+          <PaymentIcons />
+        </div>
+
         <div className="pt-12 border-t border-white/5 flex flex-col md:flex-row justify-between items-center gap-8">
           <div className="space-y-2 text-center md:text-left">
             <p className="text-slate-500 text-[10px] font-black uppercase tracking-widest">
-              © 2024 <span className="text-white">Home of Electronics</span>. All rights reserved.
+              © 2026 <span className="text-white">Home of Electronics</span>. All rights reserved.
             </p>
             <p className="text-slate-600 text-[10px] font-black uppercase tracking-widest">
               Developed by <a href="#" className="text-cyan-500 hover:text-white transition-colors">GTRwanda</a>
             </p>
-          </div>
-          <div className="flex gap-6 opacity-30 grayscale hover:opacity-100 hover:grayscale-0 transition-all cursor-pointer items-center">
-            <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest mr-2">Local Payments:</span>
-            <span className="text-2xl">📲</span>
-            <span className="text-2xl">💸</span>
-            <span className="text-2xl">💵</span>
-            <span className="text-2xl">💳</span>
           </div>
         </div>
       </div>
