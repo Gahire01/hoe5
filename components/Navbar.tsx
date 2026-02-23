@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Search, ShoppingCart, Menu, X, MapPin, BookOpen, Phone, Mail, User, LogOut } from 'lucide-react';
+import { Search, ShoppingCart, Menu, X, MapPin, BookOpen, Phone, Mail, User } from 'lucide-react';
 import { CONTACT_INFO } from '../constants';
 
 interface NavbarProps {
@@ -198,23 +198,4 @@ const Navbar: React.FC<NavbarProps> = ({ cartCount, onSearch, onOpenCart, onOpen
   );
 };
 
-export default Navbar;import { BrowserRouter, Routes, Route } from 'react-router-dom';
-// ... imports
-import StoreLocator from './pages/StoreLocator';
-import TechGuides from './pages/TechGuides';
-import Support from './pages/Support';
-import TopUp from './pages/TopUp';
-
-function AppContent() { /* existing App code but without BrowserRouter */ }
-
-const App = () => (
-  <BrowserRouter>
-    <Routes>
-      <Route path="/" element={<AppContent />} />
-      <Route path="/store-locator" element={<StoreLocator />} />
-      <Route path="/tech-guides" element={<TechGuides />} />
-      <Route path="/support" element={<Support />} />
-      <Route path="/top-up" element={<TopUp />} />
-    </Routes>
-  </BrowserRouter>
-);
+export default Navbar;

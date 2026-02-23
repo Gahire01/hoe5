@@ -1,5 +1,5 @@
-
 import React, { useState } from 'react';
+import { X } from 'lucide-react';
 import { UserRole } from '../types';
 import { CONTACT_INFO } from '../constants';
 
@@ -34,13 +34,21 @@ const AuthModal: React.FC<Props> = ({ isOpen, onClose, onLogin }) => {
     <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-slate-950/80 backdrop-blur-xl" onClick={onClose} />
       <div className="relative w-full max-w-md bg-white rounded-[3rem] overflow-hidden shadow-2xl animate-in fade-in zoom-in duration-500">
+        {/* Close button */}
+        <button
+          onClick={onClose}
+          className="absolute top-6 right-6 z-20 w-10 h-10 bg-slate-200/50 backdrop-blur-sm rounded-full flex items-center justify-center text-slate-600 hover:bg-cyan-500 hover:text-white transition-colors"
+        >
+          <X size={20} />
+        </button>
+
         <div className="bg-slate-900 p-10 text-white text-center relative overflow-hidden">
           <div className="absolute top-0 left-0 w-full h-full opacity-10 pointer-events-none">
-             <div className="absolute top-0 right-0 w-32 h-32 bg-cyan-500 blur-[80px]" />
-             <div className="absolute bottom-0 left-0 w-32 h-32 bg-amber-500 blur-[80px]" />
+            <div className="absolute top-0 right-0 w-32 h-32 bg-cyan-500 blur-[80px]" />
+            <div className="absolute bottom-0 left-0 w-32 h-32 bg-amber-500 blur-[80px]" />
           </div>
           <div className="w-20 h-20 bg-white/10 rounded-[2.5rem] mx-auto flex items-center justify-center mb-6 relative z-10 shadow-inner">
-             <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="text-cyan-400"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10"/></svg>
+            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="text-cyan-400"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10"/></svg>
           </div>
           <h2 className="text-3xl font-black tracking-tighter relative z-10 leading-none">{isLogin ? 'AUTHENTICATE' : 'INITIALIZE PROFILE'}</h2>
           <p className="text-slate-500 text-[10px] mt-4 font-black uppercase tracking-[0.3em] relative z-10">Secured Access Layer</p>
@@ -51,32 +59,32 @@ const AuthModal: React.FC<Props> = ({ isOpen, onClose, onLogin }) => {
             {error && <p className="text-red-500 text-[10px] font-black uppercase tracking-widest text-center">{error}</p>}
 
             <div className="space-y-4">
-               <div className="relative group">
-                  <div className="absolute inset-y-0 left-5 flex items-center pointer-events-none text-slate-400 group-focus-within:text-cyan-500 transition-colors">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
-                  </div>
-                  <input
-                    type="email"
-                    required
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder="Email Identifier"
-                    className="w-full bg-slate-50 border border-slate-100 rounded-2xl pl-12 pr-6 py-4 text-sm focus:outline-none focus:ring-4 focus:ring-cyan-500/10 transition-all font-bold placeholder:text-slate-400"
-                  />
-               </div>
-               <div className="relative group">
-                  <div className="absolute inset-y-0 left-5 flex items-center pointer-events-none text-slate-400 group-focus-within:text-cyan-500 transition-colors">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-                  </div>
-                  <input
-                    type="password"
-                    required
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    placeholder="Access Token"
-                    className="w-full bg-slate-50 border border-slate-100 rounded-2xl pl-12 pr-6 py-4 text-sm focus:outline-none focus:ring-4 focus:ring-cyan-500/10 transition-all font-bold placeholder:text-slate-400"
-                  />
-               </div>
+              <div className="relative group">
+                <div className="absolute inset-y-0 left-5 flex items-center pointer-events-none text-slate-400 group-focus-within:text-cyan-500 transition-colors">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
+                </div>
+                <input
+                  type="email"
+                  required
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="Email Identifier"
+                  className="w-full bg-slate-50 border border-slate-100 rounded-2xl pl-12 pr-6 py-4 text-sm focus:outline-none focus:ring-4 focus:ring-cyan-500/10 transition-all font-bold placeholder:text-slate-400"
+                />
+              </div>
+              <div className="relative group">
+                <div className="absolute inset-y-0 left-5 flex items-center pointer-events-none text-slate-400 group-focus-within:text-cyan-500 transition-colors">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                </div>
+                <input
+                  type="password"
+                  required
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="Access Token"
+                  className="w-full bg-slate-50 border border-slate-100 rounded-2xl pl-12 pr-6 py-4 text-sm focus:outline-none focus:ring-4 focus:ring-cyan-500/10 transition-all font-bold placeholder:text-slate-400"
+                />
+              </div>
             </div>
           </div>
 
@@ -139,16 +147,6 @@ const AuthModal: React.FC<Props> = ({ isOpen, onClose, onLogin }) => {
         </form>
       </div>
     </div>
-    // Inside the modal container, after the header or in the header
-<div className="relative w-full max-w-md bg-white rounded-[3rem] overflow-hidden shadow-2xl animate-in fade-in zoom-in duration-500">
-  <button
-    onClick={onClose}
-    className="absolute top-6 right-6 z-20 w-10 h-10 bg-slate-200/50 backdrop-blur-sm rounded-full flex items-center justify-center text-slate-600 hover:bg-cyan-500 hover:text-white transition-colors"
-  >
-    <X size={20} />
-  </button>
-  {/* rest of modal */}
-</div>
   );
 };
 
