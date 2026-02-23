@@ -35,7 +35,6 @@ Style Guide:
 - Be extremely helpful but maintain a professional distance.
 `;
 
-// Fallback responses when AI is unavailable
 function fallbackResponse(userPrompt: string): string {
   const lower = userPrompt.toLowerCase();
   if (lower.includes('iphone') || lower.includes('apple')) {
@@ -56,7 +55,7 @@ function fallbackResponse(userPrompt: string): string {
   return "I'm your Tech Architect. How can I assist you today?";
 }
 
-export async function getAIResponse(userPrompt: string, chatHistory: { role: 'user' | 'model', parts: { text: string }[] }[]) {
+export async function getAIResponse(userPrompt: string, chatHistory: any[]) {
   try {
     const ai = getAI();
     if (!ai) return fallbackResponse(userPrompt);
