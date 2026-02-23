@@ -1,11 +1,19 @@
-export type UserRole = 'user' | 'admin' | 'guest';
+import { IconType } from 'react-icons';
 
-export interface User {
+export interface Category {
   id: string;
   name: string;
-  email: string;
-  role: UserRole;
-  avatar?: string;
+  icon: IconType;
+}
+
+export interface Supplier {
+  name: string;
+  logo: string;
+}
+
+export interface PaymentMethod {
+  name: string;
+  icon: IconType;
 }
 
 export interface Product {
@@ -19,25 +27,11 @@ export interface Product {
   badge?: string;
   isNew?: boolean;
   stock: number;
-  specs?: Record<string, string>; // e.g., { "Processor": "M3", "RAM": "16GB" }
+  specs: Record<string, string>;
 }
 
-export interface CartItem extends Product {
-  quantity: number;
-}
-
-export interface Supplier {
-  name: string;
-  logo: string;
-}
-
-export interface PaymentMethod {
-  name: string;
-  icon: string;
-}
-
-export interface Category {
-  id: string;
-  name: string;
-  icon: string;
+export interface FeaturedService {
+  title: string;
+  desc: string;
+  icon: IconType;
 }
