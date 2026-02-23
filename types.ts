@@ -1,5 +1,15 @@
 import { IconType } from 'react-icons';
 
+export type UserRole = 'user' | 'admin' | 'guest';
+
+export interface User {
+  id: string;
+  name: string;
+  email: string;
+  role: UserRole;
+  avatar?: string;
+}
+
 export interface Category {
   id: string;
   name: string;
@@ -34,4 +44,18 @@ export interface FeaturedService {
   title: string;
   desc: string;
   icon: IconType;
+}
+
+export interface TeamMember {
+  id: string;
+  name: string;
+  role: string;
+  image: string;
+  email: string;
+  phone: string;
+  social?: {
+    linkedin?: string;
+    twitter?: string;
+    github?: string;
+  };
 }

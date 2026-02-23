@@ -1,11 +1,7 @@
-import { Product, Category, Supplier, PaymentMethod, FeaturedService } from './types';
-
-/* =========================
-   ICON IMPORTS
-========================= */
+import { Product, Category, Supplier, PaymentMethod, FeaturedService, TeamMember } from './types';
 import {
   FaMobileAlt,
-  FaHeadphonesAlt,
+  FaHeadphones,
   FaLaptop,
   FaGamepad,
   FaClock,
@@ -16,13 +12,23 @@ import {
   FaGem,
   FaMoneyBillWave,
   FaCreditCard,
+  FaApple,
+  FaAndroid,
+  FaWindows,
+  FaPlaystation,
+  FaGoogle,
+  FaMobile,
 } from 'react-icons/fa';
-
 import { MdPayments, MdSupportAgent } from 'react-icons/md';
+import {
+  SiOneplus,
+  SiXiaomi,
+  SiLenovo,
+  SiOppo,
+  SiVivo,
+  //SiRealme
+} from 'react-icons/si';
 
-/* =========================
-   CONTACT INFO
-========================= */
 export const CONTACT_INFO = {
   location: 'Around Makuza Peace Plaza, Kigali, Rwanda',
   phone: '+250 780 615 795',
@@ -31,37 +37,32 @@ export const CONTACT_INFO = {
   adminPassword: '234456',
 };
 
-/* =========================
-   CATEGORIES
-========================= */
 export const CATEGORIES: Category[] = [
   { id: '1', name: 'Smartphone', icon: FaMobileAlt },
-  { id: '2', name: 'Accessories', icon: FaHeadphonesAlt },
-  { id: '3', name: 'Audio', icon: FaHeadphonesAlt },
+  { id: '2', name: 'Accessories', icon: FaHeadphones },
+  { id: '3', name: 'Audio', icon: FaHeadphones },
   { id: '4', name: 'Computer & Laptop', icon: FaLaptop },
   { id: '5', name: 'Games & Consoles', icon: FaGamepad },
   { id: '6', name: 'Watches', icon: FaClock },
   { id: '7', name: 'Camera', icon: FaCamera },
 ];
 
-/* =========================
-   SUPPLIERS
-========================= */
 export const SUPPLIERS: Supplier[] = [
-  { name: 'Apple', logo: 'https://upload.wikimedia.org/wikipedia/commons/f/fa/Apple_logo_black.svg' },
-  { name: 'Samsung', logo: 'https://upload.wikimedia.org/wikipedia/commons/2/24/Samsung_Logo.svg' },
-  { name: 'Google', logo: 'https://upload.wikimedia.org/wikipedia/commons/5/53/Google_%22G%22_Logo.svg' },
-  { name: 'Sony', logo: 'https://upload.wikimedia.org/wikipedia/commons/0/00/PlayStation_logo.svg' },
-  { name: 'Dell', logo: 'https://upload.wikimedia.org/wikipedia/commons/1/18/Dell_logo_2016.svg' },
-  { name: 'HP', logo: 'https://upload.wikimedia.org/wikipedia/commons/a/ad/HP_logo_2012.svg' },
-  { name: 'Xiaomi', logo: 'https://upload.wikimedia.org/wikipedia/commons/2/29/Xiaomi_logo.svg' },
-  { name: 'OnePlus', logo: 'https://upload.wikimedia.org/wikipedia/commons/c/c9/OnePlus_logo.svg' },
-  { name: 'Lenovo', logo: 'https://upload.wikimedia.org/wikipedia/commons/b/b8/Lenovo_logo_2015.svg' },
+  { name: 'Apple', logo: FaApple },
+  { name: 'Samsung', logo: FaAndroid },
+  { name: 'Google', logo: FaGoogle },
+  { name: 'Sony', logo: FaPlaystation },
+  { name: 'Microsoft', logo: FaWindows },
+  { name: 'Xiaomi', logo: SiXiaomi },
+  { name: 'OnePlus', logo: SiOneplus },
+  { name: 'Lenovo', logo: SiLenovo },
+  { name: 'Oppo', logo: SiOppo },
+  { name: 'Vivo', logo: SiVivo },
+  //{ name: 'Realme', logo: SiRealme },
+  { name: 'Infinix', logo: FaMobile },      // Fallback to generic mobile icon
+  { name: 'Tecno', logo: FaMobileAlt },    // Fallback to another generic icon
 ];
 
-/* =========================
-   PAYMENT METHODS
-========================= */
 export const PAYMENT_METHODS: PaymentMethod[] = [
   { name: 'Momo Pay', icon: MdPayments },
   { name: 'Airtel Money', icon: FaMoneyBillWave },
@@ -69,9 +70,6 @@ export const PAYMENT_METHODS: PaymentMethod[] = [
   { name: 'Visa / Mastercard', icon: FaCreditCard },
 ];
 
-/* =========================
-   FEATURED SERVICES
-========================= */
 export const FEATURED_SERVICES: FeaturedService[] = [
   { title: 'Join Risk Free', desc: '30 days refund guarantee', icon: FaGem },
   { title: '100% Safe', desc: 'Secure payments encrypted', icon: FaShieldAlt },
@@ -80,9 +78,36 @@ export const FEATURED_SERVICES: FeaturedService[] = [
   { title: 'Free Delivery', desc: 'On all orders above $500', icon: FaTruck },
 ];
 
-/* =========================
-   PRODUCTS (UNCHANGED LOGIC)
-========================= */
+export const TEAM_MEMBERS: TeamMember[] = [
+  {
+    id: '1',
+    name: 'John Doe',
+    role: 'CEO & Founder',
+    image: 'https://randomuser.me/api/portraits/men/1.jpg',
+    email: 'john@homeofelectronics.rw',
+    phone: '+250 781 234 567',
+    social: { linkedin: '#', twitter: '#', github: '#' },
+  },
+  {
+    id: '2',
+    name: 'Jane Smith',
+    role: 'CTO',
+    image: 'https://randomuser.me/api/portraits/women/2.jpg',
+    email: 'jane@homeofelectronics.rw',
+    phone: '+250 782 345 678',
+    social: { linkedin: '#', twitter: '#', github: '#' },
+  },
+  {
+    id: '3',
+    name: 'Alice Johnson',
+    role: 'Lead Engineer',
+    image: 'https://randomuser.me/api/portraits/women/3.jpg',
+    email: 'alice@homeofelectronics.rw',
+    phone: '+250 783 456 789',
+    social: { linkedin: '#', twitter: '#', github: '#' },
+  },
+];
+
 export const PRODUCTS: Product[] = [
   {
     id: 'p1',
@@ -102,5 +127,183 @@ export const PRODUCTS: Product[] = [
       Material: 'Aerospace Titanium',
     },
   },
-  // (rest of products stay exactly the same)
+  {
+    id: 'p2',
+    name: 'Sony WH-1000XM5 Wireless',
+    price: 349000,
+    category: 'Audio',
+    image: 'https://images.unsplash.com/photo-1670057037146-590050868a8b?auto=format&fit=crop&q=80&w=800',
+    rating: 4.8,
+    isNew: true,
+    stock: 25,
+    specs: {
+      'Noise Cancelling': 'Industry-leading',
+      'Battery Life': '30 Hours',
+      'Driver Unit': '30mm Carbon',
+      Bluetooth: 'v5.2',
+      Sensors: 'Wearing Sensor',
+    },
+  },
+  {
+    id: 'p3',
+    name: 'Galaxy Watch 6 Classic',
+    price: 299000,
+    originalPrice: 320000,
+    category: 'Watches',
+    image: 'https://images.unsplash.com/photo-1579586337278-3befd40fd17a?auto=format&fit=crop&q=80&w=800',
+    rating: 4.5,
+    stock: 8,
+    specs: {
+      Bezel: 'Rotating',
+      Display: 'Sapphire Crystal',
+      OS: 'Wear OS 4',
+      Tracking: 'BIA Analysis',
+      Durability: 'IP68 / 5ATM',
+    },
+  },
+  {
+    id: 'p4',
+    name: 'MacBook Pro M3 Max 14"',
+    price: 2499000,
+    category: 'Computer & Laptop',
+    image: 'https://images.unsplash.com/photo-1517336714481-489a2013cc01?auto=format&fit=crop&q=80&w=800',
+    rating: 5,
+    badge: 'Premium',
+    stock: 5,
+    specs: {
+      CPU: '14-core M3 Max',
+      RAM: '36GB Unified',
+      Storage: '1TB SSD',
+      Display: 'Liquid Retina XDR',
+      Portability: '14.2-inch form',
+    },
+  },
+  {
+    id: 'p5',
+    name: 'DualSense Edge Controller',
+    price: 199000,
+    category: 'Games & Consoles',
+    image: 'https://images.unsplash.com/photo-1606144042614-b2417e99c4e3?auto=format&fit=crop&q=80&w=800',
+    rating: 4.7,
+    stock: 40,
+    specs: {
+      Feature: 'Pro Customization',
+      Triggers: 'Adjustable',
+      Buttons: 'Swappable Sticks',
+      Feedback: 'Haptic',
+      Interface: 'USB-C / Wireless',
+    },
+  },
+  {
+    id: 'p6',
+    name: 'iPad Pro 12.9" M2',
+    price: 1099000,
+    category: 'Computer & Laptop',
+    image: 'https://images.unsplash.com/photo-1544244015-0df4b3ffc6b0?auto=format&fit=crop&q=80&w=800',
+    rating: 4.9,
+    isNew: true,
+    stock: 15,
+    specs: {
+      Chip: 'Apple M2',
+      Display: 'Mini-LED XDR',
+      Brightness: '1600 nits peak',
+      Connectivity: 'Wi-Fi 6E / 5G',
+      'Apple Pencil': 'Hover support',
+    },
+  },
+  {
+    id: 'p7',
+    name: 'PlayStation 5 Console',
+    price: 650000,
+    category: 'Games & Consoles',
+    image: 'https://images.unsplash.com/photo-1606813907291-d86efa9b94db?auto=format&fit=crop&q=80&w=800',
+    rating: 5,
+    stock: 10,
+    specs: {
+      Storage: '825GB SSD',
+      Resolution: '4K 120Hz',
+      HDR: 'Supported',
+      'Ray Tracing': 'Yes',
+      Controller: 'DualSense Included',
+    },
+  },
+  {
+    id: 'p8',
+    name: 'Google Pixel 8 Pro',
+    price: 950000,
+    category: 'Smartphone',
+    image: 'https://images.unsplash.com/photo-1696446701796-da61225697cc?auto=format&fit=crop&q=80&w=800',
+    rating: 4.8,
+    stock: 15,
+    specs: {
+      Processor: 'Google Tensor G3',
+      Display: '6.7-inch LTPO OLED',
+      Camera: '50MP Triple System',
+      AI: 'Magic Editor',
+      Security: 'Titan M2',
+    },
+  },
+  {
+    id: 'p9',
+    name: 'AirPods Pro (2nd Gen)',
+    price: 299000,
+    category: 'Audio',
+    image: 'https://images.unsplash.com/photo-1606847621195-6d3c2acb5c51?auto=format&fit=crop&q=80&w=800',
+    rating: 4.9,
+    isNew: true,
+    stock: 30,
+    specs: {
+      'Noise Cancellation': 'Adaptive',
+      Chip: 'H2',
+      Battery: '6 hours',
+      'Water Resistance': 'IPX4',
+    },
+  },
+  {
+    id: 'p10',
+    name: 'Samsung Galaxy Tab S9 Ultra',
+    price: 1199000,
+    category: 'Computer & Laptop',
+    image: 'https://images.unsplash.com/photo-1589739900243-4b52cd9dd8df?auto=format&fit=crop&q=80&w=800',
+    rating: 4.7,
+    stock: 7,
+    specs: {
+      Display: '14.6-inch AMOLED',
+      Processor: 'Snapdragon 8 Gen 2',
+      RAM: '12GB',
+      Storage: '256GB',
+    },
+  },
+  {
+    id: 'p11',
+    name: 'Xiaomi 13 Ultra',
+    price: 899000,
+    originalPrice: 950000,
+    category: 'Smartphone',
+    image: 'https://images.unsplash.com/photo-1605901309584-818f25960a8f?auto=format&fit=crop&q=80&w=800',
+    rating: 4.6,
+    badge: 'Hot',
+    stock: 20,
+    specs: {
+      Processor: 'Snapdragon 8 Gen 2',
+      Camera: 'Leica 1-inch sensor',
+      Display: '6.73-inch AMOLED',
+      Battery: '5000mAh',
+    },
+  },
+  {
+    id: 'p12',
+    name: 'OnePlus 11',
+    price: 699000,
+    category: 'Smartphone',
+    image: 'https://images.unsplash.com/photo-1598327105666-5b89351aff97?auto=format&fit=crop&q=80&w=800',
+    rating: 4.5,
+    stock: 18,
+    specs: {
+      Processor: 'Snapdragon 8 Gen 2',
+      RAM: '16GB',
+      Storage: '256GB',
+      Display: '6.7-inch AMOLED',
+    },
+  },
 ];
