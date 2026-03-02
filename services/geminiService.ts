@@ -6,7 +6,7 @@ let aiInstance: GoogleGenAI | null = null;
 function getAI() {
   const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
   if (!apiKey) {
-    console.warn("GEMINI_API_KEY is not defined. AI features will be disabled.");
+    console.warn("GEMINI_API_KEY not set. Using fallback responses.");
     return null;
   }
   if (!aiInstance) {
@@ -15,43 +15,23 @@ function getAI() {
   return aiInstance;
 }
 
-const SYSTEM_INSTRUCTION = `
-You are the "Home of Electronics" Principal Tech Consultant.
-Your tone is sophisticated, expert, and efficient.
-
-Role Responsibilities:
-1. Provide deep technical insights on the following inventory: ${JSON.stringify(PRODUCTS.map(p => ({ name: p.name, category: p.category, price: p.price, specs: p.specs })), null, 2)}
-2. Explain the benefits of M3 architecture, sensor sizes in cameras, and high-impedance audio.
-3. Suggest perfect ecosystem pairings (e.g., matching a MacBook with high-end headphones).
-4. Guide the user through the checkout via WhatsApp feature if they seem ready to buy.
-5. Currency: Rwandan Franc (Rwf).
-6. Location: Around Makuza Peace plaza, Kigali, Rwanda.
-7. Payment: Momo Pay, Airtel Money, Cash, Visa/Mastercard.
-
-Style Guide:
-- Use bullet points for comparisons.
-- Keep responses under 150 words.
-- Use bold text for product names.
-- Be extremely helpful but maintain a professional distance.
-`;
+const productIndex = PRODUCTS.reduce((acc, p) => {
+  acc[p.name.toLowerCase()] = p;
+  return acc;
+}, {} as Record<string, typeof PRODUCTS[0]>);
 
 function fallbackResponse(userPrompt: string): string {
   const lower = userPrompt.toLowerCase();
-  if (lower.includes('iphone') || lower.includes('apple')) {
-    return "iPhone 15 Pro Max features a titanium body and A17 Pro chip – perfect for pro users.";
+  for (const [name, product] of Object.entries(productIndex)) {
+    if (lower.includes(name)) {
+      return `${product.name} is ${product.price.toLocaleString()} Rwf. ${product.specs ? 'Specs: ' + Object.entries(product.specs).map(([k,v]) => `${k}:${v}`).join(', ') : ''}`;
+    }
   }
-  if (lower.includes('macbook') || lower.includes('laptop')) {
-    return "The MacBook Pro M3 Max offers incredible performance for video editing and development.";
-  }
-  if (lower.includes('headphone') || lower.includes('audio')) {
-    return "Sony WH-1000XM5 are industry leaders in noise cancellation – ideal for travel.";
-  }
-  if (lower.includes('compare') || lower.includes('versus')) {
-    return "You can compare up to 3 products using the comparison tool. Click the 'compare' icon on any product card.";
-  }
-  if (lower.includes('payment') || lower.includes('pay')) {
-    return "We accept MOMO Pay, Airtel Money, Visa, Mastercard, and cash on delivery.";
-  }
+  if (lower.includes('iphone')) return "iPhone 15 Pro Max is 1,399,000 Rwf with A17 Pro chip and titanium body.";
+  if (lower.includes('macbook')) return "MacBook Pro M3 Max starts at 2,499,000 Rwf with 14‑core CPU.";
+  if (lower.includes('payment') || lower.includes('pay')) return "We accept MOMO Pay, Airtel Money, Visa, Mastercard, and cash.";
+  if (lower.includes('compare')) return "Use the compare icon on product cards to compare up to 3 items.";
+  if (lower.includes('top up') || lower.includes('trade')) return "You can request a top‑up via the 'REQUEST TOP-UP' button.";
   return "I'm your Tech Architect. How can I assist you today?";
 }
 
@@ -61,19 +41,11 @@ export async function getAIResponse(userPrompt: string, chatHistory: any[]) {
     if (!ai) return fallbackResponse(userPrompt);
     const response = await ai.models.generateContent({
       model: 'gemini-3-flash-preview',
-      contents: [
-        ...chatHistory,
-        { role: 'user', parts: [{ text: userPrompt }] }
-      ],
-      config: {
-        systemInstruction: SYSTEM_INSTRUCTION,
-        temperature: 0.8,
-        topP: 0.9,
-      }
+      contents: [...chatHistory, { role: 'user', parts: [{ text: userPrompt }] }],
+      config: { temperature: 0.7, maxOutputTokens: 150 }
     });
-    return response.text;
-  } catch (error) {
-    console.error("AI Node Failure:", error);
+    return response.text || fallbackResponse(userPrompt);
+  } catch {
     return fallbackResponse(userPrompt);
   }
 }
@@ -81,17 +53,11 @@ export async function getAIResponse(userPrompt: string, chatHistory: any[]) {
 export async function getProductSuggestion(productName: string, specs: any) {
   try {
     const ai = getAI();
-    if (!ai) return fallbackResponse(`suggest ${productName}`);
-    const prompt = `As a tech expert, briefly suggest why someone should buy the ${productName} based on these specs: ${JSON.stringify(specs)}. Focus on the "purpose" (e.g., for gaming, professional work, or daily use). Keep it under 40 words.`;
-    const response = await ai.models.generateContent({
-      model: 'gemini-3-flash-preview',
-      contents: [{ role: 'user', parts: [{ text: prompt }] }],
-      config: {
-        temperature: 0.7,
-      }
-    });
-    return response.text;
-  } catch (error) {
+    if (!ai) return fallbackResponse(productName);
+    const prompt = `Briefly suggest why someone should buy ${productName} with specs ${JSON.stringify(specs)}. Under 40 words.`;
+    const response = await ai.models.generateContent({ model: 'gemini-3-flash-preview', contents: [{ role: 'user', parts: [{ text: prompt }] }] });
+    return response.text || fallbackResponse(productName);
+  } catch {
     return fallbackResponse(productName);
   }
 }
