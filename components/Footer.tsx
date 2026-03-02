@@ -9,16 +9,16 @@ const Footer: React.FC = () => {
   return (
     <footer className="bg-slate-950 text-white pt-16 pb-8 md:pt-24 md:pb-12">
       <div className="max-w-7xl mx-auto px-4 md:px-6">
-        {/* Suppliers Section with React Icons */}
+        {/* Suppliers Section */}
         <div className="mb-16 md:mb-24">
           <h3 className="text-center text-[10px] font-black text-slate-500 uppercase tracking-[0.5em] mb-8 md:mb-12">Authorized Global Partners</h3>
           <div className="flex flex-wrap justify-center items-center gap-6 md:gap-12 opacity-60 hover:opacity-100 transition-opacity duration-700">
-            {SUPPLIERS.map((s, i) => {
-              const Icon = s.logo;
+            {SUPPLIERS.map((supplier, i) => {
+              const Icon = supplier.icon;
               return (
                 <div key={i} className="flex flex-col items-center group">
                   <Icon size={32} className="text-slate-400 group-hover:text-cyan-400 transition-colors" />
-                  <span className="text-[8px] mt-1 text-slate-500 group-hover:text-cyan-400">{s.name}</span>
+                  <span className="text-[8px] mt-1 text-slate-500 group-hover:text-cyan-400">{supplier.name}</span>
                 </div>
               );
             })}

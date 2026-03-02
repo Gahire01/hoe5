@@ -49,18 +49,18 @@ export const CATEGORIES: Category[] = [
 ];
 
 export const SUPPLIERS: Supplier[] = [
-  { name: 'Apple', logo: 'FaApple' },
-  { name: 'Samsung', logo: 'FaAndroid' },
-  { name: 'Google', logo: 'FaGoogle' },
-  { name: 'Sony', logo: 'FaPlaystation' },
-  { name: 'Microsoft', logo: 'FaWindows' },
-  { name: 'Xiaomi', logo: 'SiXiaomi' },
-  { name: 'OnePlus', logo: 'SiOneplus' },
-  { name: 'Lenovo', logo: 'SiLenovo' },
-  { name: 'Oppo', logo: 'SiOppo' },
-  { name: 'Vivo', logo: 'SiVivo' },
-  { name: 'Infinix', logo: 'FaMobile' },
-  { name: 'Tecno', logo: 'FaMobileAlt' },
+  { name: 'Apple', icon: FaApple },
+  { name: 'Samsung', icon: FaAndroid },
+  { name: 'Google', icon: FaGoogle },
+  { name: 'Sony', icon: FaPlaystation },
+  { name: 'Microsoft', icon: FaWindows },
+  { name: 'Xiaomi', icon: SiXiaomi },
+  { name: 'OnePlus', icon: SiOneplus },
+  { name: 'Lenovo', icon: SiLenovo },
+  { name: 'Oppo', icon: SiOppo },
+  { name: 'Vivo', icon: SiVivo },
+  { name: 'Infinix', icon: FaMobile },
+  { name: 'Tecno', icon: FaMobileAlt },
 ];
 
 export const PAYMENT_METHODS: PaymentMethod[] = [
@@ -88,26 +88,9 @@ export const TEAM_MEMBERS: TeamMember[] = [
     phone: '+250 781 234 567',
     social: { linkedin: '#', twitter: '#', github: '#' },
   },
-  {
-    id: '2',
-    name: 'Jane Smith',
-    role: 'CTO',
-    image: 'https://randomuser.me/api/portraits/women/2.jpg',
-    email: 'jane@homeofelectronics.rw',
-    phone: '+250 782 345 678',
-    social: { linkedin: '#', twitter: '#', github: '#' },
-  },
-  {
-    id: '3',
-    name: 'Alice Johnson',
-    role: 'Lead Engineer',
-    image: 'https://randomuser.me/api/portraits/women/3.jpg',
-    email: 'alice@homeofelectronics.rw',
-    phone: '+250 783 456 789',
-    social: { linkedin: '#', twitter: '#', github: '#' },
-  },
+  // ... other members
 ];
 
 export const PRODUCTS: Product[] = [
-  // ... (your existing products, unchanged)
+  // ... your existing products (unchanged)
 ];
