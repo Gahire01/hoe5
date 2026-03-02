@@ -1,5 +1,8 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { onAuthStateChanged } from 'firebase/auth';
+import { collection, getDocs, query, orderBy, doc, getDoc } from 'firebase/firestore';
+import { auth, db } from './firebase';
 import Navbar from './components/Navbar';
 import Hero from './components/Hero';
 import ProductCard from './components/ProductCard';
@@ -12,12 +15,13 @@ import AdminPanel from './components/AdminPanel';
 import AboutSection from './components/AboutSection';
 import ComparisonModal from './components/ComparisonModal';
 import TeamSection from './components/TeamSection';
+import TopUpModal from './components/TopUpModal';
 import StoreLocator from './pages/StoreLocator';
 import TechGuides from './pages/TechGuides';
 import Support from './pages/Support';
 import TopUp from './pages/TopUp';
 import { PRODUCTS as INITIAL_PRODUCTS, CATEGORIES, FEATURED_SERVICES, TEAM_MEMBERS } from './constants';
-import { Product, CartItem, User, UserRole } from './types';
+import { Product, CartItem, User } from './types';
 import { Search, X, ArrowRight } from 'lucide-react';
 
 function AppContent() {
@@ -25,8 +29,9 @@ function AppContent() {
   const [isAuthOpen, setIsAuthOpen] = useState(false);
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [isCartOpen, setIsCartOpen] = useState(false);
+  const [isTopUpOpen, setIsTopUpOpen] = useState(false);
 
-  const [allProducts, setAllProducts] = useState<Product[]>(INITIAL_PRODUCTS);
+  const [allProducts, setAllProducts] = useState<Product[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
 
@@ -37,23 +42,49 @@ function AppContent() {
   const footerRef = useRef<HTMLDivElement>(null);
   const [showFloatingButtons, setShowFloatingButtons] = useState(false);
 
-  // Load from localStorage
+  // Load data from Firebase
+// In App.tsx, inside AppContent component, add this useEffect
+useEffect(() => {
+  const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+    if (firebaseUser) {
+      console.log('Auth state changed - user logged in:', firebaseUser.email);
+      const userDoc = await getDoc(doc(db, 'users', firebaseUser.uid));
+      const role = userDoc.exists() ? userDoc.data().role : 'user';
+      setUser({
+        uid: firebaseUser.uid,
+        name: firebaseUser.displayName || firebaseUser.email?.split('@')[0] || '',
+        email: firebaseUser.email || '',
+        role,
+        avatar: firebaseUser.photoURL || undefined,
+      });
+    } else {
+      console.log('Auth state changed - user logged out');
+      setUser(null);
+    }
+  });
+
+  return () => unsubscribe();
+}, []);
+
   useEffect(() => {
-    const saved = localStorage.getItem('cart');
-    if (saved) setCartItems(JSON.parse(saved));
-    const savedUser = localStorage.getItem('user');
-    if (savedUser) setUser(JSON.parse(savedUser));
-    const savedProducts = localStorage.getItem('inventory');
-    if (savedProducts) setAllProducts(JSON.parse(savedProducts));
+    const fetchProducts = async () => {
+      const q = query(collection(db, 'products'), orderBy('createdAt', 'desc'));
+      const snapshot = await getDocs(q);
+      const prods: Product[] = [];
+      snapshot.forEach((doc) => prods.push({ id: doc.id, ...doc.data() } as Product));
+      setAllProducts(prods.length ? prods : INITIAL_PRODUCTS);
+    };
+    fetchProducts();
+  }, []);
+
+  useEffect(() => {
+    const savedCart = localStorage.getItem('cart');
+    if (savedCart) setCartItems(JSON.parse(savedCart));
   }, []);
 
   useEffect(() => {
     localStorage.setItem('cart', JSON.stringify(cartItems));
   }, [cartItems]);
-
-  useEffect(() => {
-    localStorage.setItem('inventory', JSON.stringify(allProducts));
-  }, [allProducts]);
 
   // Debounce search
   useEffect(() => {
@@ -61,7 +92,7 @@ function AppContent() {
     return () => clearTimeout(timer);
   }, [searchQuery]);
 
-  // Intersection Observer for hero and footer
+  // Intersection Observer for hero/footer
   useEffect(() => {
     const observer = new IntersectionObserver(
       (entries) => {
@@ -71,27 +102,13 @@ function AppContent() {
       },
       { threshold: 0, rootMargin: '0px' }
     );
-
     if (heroRef.current) observer.observe(heroRef.current);
     if (footerRef.current) observer.observe(footerRef.current);
-
     return () => {
       if (heroRef.current) observer.unobserve(heroRef.current);
       if (footerRef.current) observer.unobserve(footerRef.current);
     };
   }, []);
-
-  const handleLogin = (name: string, role: UserRole, email: string) => {
-    const newUser: User = { id: '1', name, email, role };
-    setUser(newUser);
-    localStorage.setItem('user', JSON.stringify(newUser));
-    setIsAuthOpen(false);
-  };
-
-  const handleLogout = () => {
-    setUser(null);
-    localStorage.removeItem('user');
-  };
 
   const addToCart = (product: Product) => {
     setCartItems(prev => {
@@ -118,6 +135,7 @@ function AppContent() {
 
   const filteredProducts = useMemo(() => {
     const query = debouncedSearch.toLowerCase();
+    if (!query) return allProducts;
     return allProducts.filter(p =>
       p.name.toLowerCase().includes(query) ||
       p.category.toLowerCase().includes(query) ||
@@ -127,6 +145,18 @@ function AppContent() {
 
   const compareProducts = useMemo(() => allProducts.filter(p => compareIds.includes(p.id)), [allProducts, compareIds]);
   const cartCount = cartItems.reduce((acc, item) => acc + item.quantity, 0);
+  const lowStockCount = allProducts.filter(p => p.stock < 5).length;
+  const newProductsCount = allProducts.filter(p => p.isNew).length;
+
+  // Suggest related if no results
+  const noResults = filteredProducts.length === 0 && debouncedSearch;
+  const suggestions = useMemo(() => {
+    if (!noResults) return [];
+    const words = debouncedSearch.toLowerCase().split(' ');
+    return allProducts
+      .filter(p => words.some(w => p.name.toLowerCase().includes(w) || p.category.toLowerCase().includes(w)))
+      .slice(0, 4);
+  }, [noResults, allProducts, debouncedSearch]);
 
   return (
     <div className="min-h-screen flex flex-col font-sans selection:bg-cyan-100 selection:text-cyan-900 bg-slate-50">
@@ -136,7 +166,7 @@ function AppContent() {
         onOpenCart={() => setIsCartOpen(true)}
         onOpenAuth={() => setIsAuthOpen(true)}
         user={user}
-        onLogout={handleLogout}
+        onLogout={() => auth.signOut()}
       />
 
       <main className="flex-1 max-w-7xl mx-auto w-full px-4 sm:px-6 py-12 space-y-16 md:space-y-24">
@@ -144,7 +174,18 @@ function AppContent() {
           <Hero />
         </div>
 
-        {/* Feature Matrix with React Icons */}
+        {/* Top-Up Quick Access */}
+        <div className="flex justify-end">
+          <button
+            onClick={() => setIsTopUpOpen(true)}
+            className="bg-slate-900 text-white px-6 py-3 rounded-2xl font-black text-xs tracking-widest hover:bg-cyan-500 hover:text-slate-900 transition-all shadow-xl flex items-center gap-2"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><path d="M12 2v20M2 12h20"/></svg>
+            REQUEST TOP-UP
+          </button>
+        </div>
+
+        {/* Feature Matrix */}
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4 md:gap-8">
           {FEATURED_SERVICES.map((s, i) => (
             <div key={i} className="flex flex-col items-center text-center p-6 md:p-8 bg-white rounded-2xl md:rounded-3xl shadow-sm border border-slate-100 hover:border-cyan-200 hover:shadow-xl transition-all duration-500 group cursor-default">
@@ -183,20 +224,6 @@ function AppContent() {
                 })}
               </ul>
             </div>
-
-            <div className="rounded-3xl overflow-hidden aspect-[4/5] bg-slate-950 shadow-2xl group relative border border-white/5">
-              <img src="https://images.unsplash.com/photo-1614850523296-d8c1af93d400?auto=format&fit=crop&q=80&w=400" className="absolute inset-0 w-full h-full object-cover opacity-40 group-hover:scale-110 transition-transform duration-1000" alt="Cyber Promo" />
-              <div className="absolute inset-0 p-8 flex flex-col justify-end bg-gradient-to-t from-slate-950 via-transparent">
-                <span className="text-cyan-400 text-[10px] font-black uppercase tracking-widest mb-4 flex items-center gap-2">
-                  <div className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse" />
-                  Nexus Access
-                </span>
-                <h4 className="text-3xl font-black text-white leading-tight mb-6 tracking-tighter">Accelerate <br/>Your Workflow.</h4>
-                <a href="/top-up" className="bg-white text-slate-950 px-6 py-3 rounded-xl text-[10px] font-black tracking-widest hover:bg-cyan-400 transition-all self-start shadow-2xl">
-                  REQUEST QUOTE
-                </a>
-              </div>
-            </div>
           </aside>
 
           <div className="flex-1 space-y-12">
@@ -204,8 +231,9 @@ function AppContent() {
               <AdminPanel
                 onAdd={addProduct}
                 totalProducts={allProducts.length}
-                lowStockCount={allProducts.filter(p => p.stock < 5).length}
-                newProductsCount={allProducts.filter(p => p.isNew).length}
+                lowStockCount={lowStockCount}
+                newProductsCount={newProductsCount}
+                userRole={user.role}
               />
             )}
 
@@ -238,11 +266,26 @@ function AppContent() {
                     <Search size={32} className="text-slate-300" />
                   </div>
                   <p className="text-slate-400 font-black text-xs uppercase tracking-[0.4em]">Zero matches in current sectors</p>
+                  {suggestions.length > 0 && (
+                    <div className="mt-8 max-w-md mx-auto">
+                      <p className="text-slate-500 text-xs font-black mb-4">Perhaps you meant:</p>
+                      <div className="flex flex-wrap gap-2 justify-center">
+                        {suggestions.map(p => (
+                          <button
+                            key={p.id}
+                            onClick={() => setSearchQuery(p.name)}
+                            className="bg-white px-4 py-2 rounded-full text-xs font-black border border-slate-200 hover:border-cyan-500 hover:text-cyan-600 transition"
+                          >
+                            {p.name}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
             </section>
 
-            {/* "View All Products" link */}
             <div className="text-center">
               <a href="/products" className="inline-flex items-center gap-2 bg-slate-900 text-white px-8 py-4 rounded-full font-black text-xs tracking-widest hover:bg-cyan-500 hover:text-slate-900 transition-all shadow-xl">
                 EXPLORE ALL PRODUCTS <ArrowRight size={16} />
@@ -251,9 +294,7 @@ function AppContent() {
           </div>
         </div>
 
-        {/* Team Section */}
         <TeamSection members={TEAM_MEMBERS} />
-
         <AboutSection />
 
         {/* Global Access Banner */}
@@ -282,7 +323,7 @@ function AppContent() {
         <Footer />
       </div>
 
-      {/* Floating UI Elements */}
+      {/* Floating UI */}
       {showFloatingButtons && (
         <>
           <AIChatBot />
@@ -290,7 +331,7 @@ function AppContent() {
         </>
       )}
 
-      {/* Comparison Floating Bar */}
+      {/* Comparison Bar */}
       {compareIds.length > 0 && (
         <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 animate-in slide-in-from-bottom-10 duration-500 w-[90%] md:w-auto">
           <div className="bg-slate-950 text-white p-3 md:p-4 rounded-2xl md:rounded-[2rem] shadow-2xl border border-white/10 flex flex-wrap items-center justify-center gap-3 md:gap-6 backdrop-blur-xl">
@@ -317,11 +358,11 @@ function AppContent() {
         </div>
       )}
 
-      {/* Modals & Overlays */}
+      {/* Modals */}
       <AuthModal
         isOpen={isAuthOpen}
         onClose={() => setIsAuthOpen(false)}
-        onLogin={handleLogin}
+        onLogin={setUser}
       />
       <CartDrawer
         isOpen={isCartOpen}
@@ -336,6 +377,11 @@ function AppContent() {
         products={compareProducts}
         onRemove={toggleCompare}
       />
+      <TopUpModal
+        isOpen={isTopUpOpen}
+        onClose={() => setIsTopUpOpen(false)}
+        user={user}
+      />
     </div>
   );
 }
@@ -347,13 +393,9 @@ const App = () => (
       <Route path="/store-locator" element={<StoreLocator />} />
       <Route path="/tech-guides" element={<TechGuides />} />
       <Route path="/support" element={<Support />} />
-      <Route path="/top-up" element={<TopUp />} />
+      <Route path="/top-up" element={<TopUp user={null} />} />
       <Route path="/products" element={<div>All Products Page (coming soon)</div>} />
-      <Route path="/privacy" element={<div>Privacy Policy (coming soon)</div>} />
-      <Route path="/terms" element={<div>Terms of Service (coming soon)</div>} />
-      <Route path="/refund" element={<div>Refund Policy (coming soon)</div>} />
-      <Route path="/shipping" element={<div>Shipping Info (coming soon)</div>} />
-      <Route path="/affiliate" element={<div>Affiliate Program (coming soon)</div>} />
+      {/* other routes */}
     </Routes>
   </BrowserRouter>
 );

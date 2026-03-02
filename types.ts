@@ -3,7 +3,7 @@ import { IconType } from 'react-icons';
 export type UserRole = 'user' | 'admin' | 'guest';
 
 export interface User {
-  id: string;
+  uid: string;
   name: string;
   email: string;
   role: UserRole;
@@ -18,7 +18,7 @@ export interface Category {
 
 export interface Supplier {
   name: string;
-  logo: string;
+  logo: string; // icon component name, but we'll keep as string for simplicity
 }
 
 export interface PaymentMethod {
@@ -40,6 +40,28 @@ export interface Product {
   specs: Record<string, string>;
 }
 
+export interface Employee {
+  id: string;
+  name: string;
+  email: string;
+  phone?: string;
+  role: string;
+  social?: { linkedin?: string; twitter?: string; github?: string };
+  image?: string;
+}
+
+export interface TopUpRequest {
+  id: string;
+  userId: string;
+  userName: string;
+  phone: string;
+  model: string;
+  images: string[];
+  message: string;
+  status: 'pending' | 'in-progress' | 'completed';
+  createdAt: Date;
+}
+
 export interface FeaturedService {
   title: string;
   desc: string;
@@ -58,4 +80,8 @@ export interface TeamMember {
     twitter?: string;
     github?: string;
   };
+}
+
+export interface CartItem extends Product {
+  quantity: number;
 }
