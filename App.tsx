@@ -33,6 +33,56 @@ import {
 import { Product, CartItem, User } from './types';
 import { Search, X, ArrowRight } from 'lucide-react';
 
+// Simple Category Sidebar Component
+const CategorySidebar: React.FC<{
+  categories: typeof CATEGORIES;
+  selectedCategory: string | null;
+  onSelectCategory: (catId: string | null) => void;
+  onClearSearch: () => void;
+}> = ({ categories, selectedCategory, onSelectCategory, onClearSearch }) => {
+  return (
+    <div className="bg-white rounded-3xl p-6 shadow-md border border-slate-100 sticky top-28">
+      <h3 className="text-xs font-black text-slate-900 uppercase tracking-widest mb-4">Categories</h3>
+      <ul className="space-y-2">
+        <li>
+          <button
+            onClick={() => onSelectCategory(null)}
+            className={`w-full text-left px-3 py-2 rounded-xl text-sm font-bold transition-colors ${
+              selectedCategory === null ? 'bg-cyan-500 text-white' : 'text-slate-600 hover:bg-slate-100'
+            }`}
+          >
+            All Products
+          </button>
+        </li>
+        {categories.map((cat) => {
+          const Icon = cat.icon;
+          return (
+            <li key={cat.id}>
+              <button
+                onClick={() => onSelectCategory(cat.id)}
+                className={`w-full text-left px-3 py-2 rounded-xl text-sm font-bold transition-colors flex items-center gap-3 ${
+                  selectedCategory === cat.id ? 'bg-cyan-500 text-white' : 'text-slate-600 hover:bg-slate-100'
+                }`}
+              >
+                <Icon size={18} />
+                {cat.name}
+              </button>
+            </li>
+          );
+        })}
+      </ul>
+      <div className="mt-6 pt-4 border-t border-slate-100">
+        <button
+          onClick={onClearSearch}
+          className="text-xs font-black text-slate-400 uppercase tracking-widest hover:text-cyan-600 transition-colors"
+        >
+          Clear Search
+        </button>
+      </div>
+    </div>
+  );
+};
+
 function AppContent() {
   const [user, setUser] = useState<User | null>(null);
   const [isAuthOpen, setIsAuthOpen] = useState(false);
@@ -43,6 +93,7 @@ function AppContent() {
   const [allProducts, setAllProducts] = useState<Product[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
 
   const [compareIds, setCompareIds] = useState<string[]>([]);
   const [isComparisonOpen, setIsComparisonOpen] = useState(false);
@@ -51,7 +102,6 @@ function AppContent() {
   const footerRef = useRef<HTMLDivElement>(null);
   const [showFloatingButtons, setShowFloatingButtons] = useState(false);
 
-  // ✅ SAFE Firebase Auth Listener (MERGED)
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       if (!firebaseUser) {
@@ -72,10 +122,7 @@ function AppContent() {
 
       setUser({
         uid: firebaseUser.uid,
-        name:
-          firebaseUser.displayName ||
-          firebaseUser.email?.split('@')[0] ||
-          '',
+        name: firebaseUser.displayName || firebaseUser.email?.split('@')[0] || '',
         email: firebaseUser.email || '',
         role,
         avatar: firebaseUser.photoURL || undefined,
@@ -85,7 +132,6 @@ function AppContent() {
     return () => unsubscribe();
   }, []);
 
-  // Products fetch
   useEffect(() => {
     const fetchProducts = async () => {
       try {
@@ -105,7 +151,6 @@ function AppContent() {
     fetchProducts();
   }, []);
 
-  // Cart persistence
   useEffect(() => {
     const savedCart = localStorage.getItem('cart');
     if (savedCart) setCartItems(JSON.parse(savedCart));
@@ -115,13 +160,11 @@ function AppContent() {
     localStorage.setItem('cart', JSON.stringify(cartItems));
   }, [cartItems]);
 
-  // Debounced search
   useEffect(() => {
     const timer = setTimeout(() => setDebouncedSearch(searchQuery), 300);
     return () => clearTimeout(timer);
   }, [searchQuery]);
 
-  // Floating buttons observer
   useEffect(() => {
     const observer = new IntersectionObserver((entries) => {
       const heroVisible = entries.find(
@@ -144,9 +187,7 @@ function AppContent() {
       const existing = prev.find((i) => i.id === product.id);
       if (existing) {
         return prev.map((i) =>
-          i.id === product.id
-            ? { ...i, quantity: i.quantity + 1 }
-            : i
+          i.id === product.id ? { ...i, quantity: i.quantity + 1 } : i
         );
       }
       return [...prev, { ...product, quantity: 1 }];
@@ -155,14 +196,29 @@ function AppContent() {
   };
 
   const filteredProducts = useMemo(() => {
+    let filtered = allProducts;
     const q = debouncedSearch.toLowerCase();
-    if (!q) return allProducts;
-    return allProducts.filter(
-      (p) =>
-        p.name.toLowerCase().includes(q) ||
-        p.category.toLowerCase().includes(q)
-    );
-  }, [allProducts, debouncedSearch]);
+    if (q) {
+      filtered = filtered.filter(
+        (p) =>
+          p.name.toLowerCase().includes(q) ||
+          p.category.toLowerCase().includes(q)
+      );
+    }
+    if (selectedCategory) {
+      const cat = CATEGORIES.find(c => c.id === selectedCategory);
+      if (cat) {
+        filtered = filtered.filter(p => p.category.toLowerCase() === cat.name.toLowerCase());
+      }
+    }
+    return filtered;
+  }, [allProducts, debouncedSearch, selectedCategory]);
+
+  const handleClearSearch = () => {
+    setSearchQuery('');
+    setDebouncedSearch('');
+    setSelectedCategory(null);
+  };
 
   return (
     <div className="min-h-screen flex flex-col bg-slate-50">
@@ -190,17 +246,36 @@ function AppContent() {
           />
         )}
 
-        <section className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-8">
-          {filteredProducts.map((product) => (
-            <ProductCard
-              key={product.id}
-              product={product}
-              onAddToCart={addToCart}
-              isComparing={false}
-              onToggleCompare={() => {}}
+        <div className="flex flex-col lg:flex-row gap-8">
+          {/* Sidebar */}
+          <aside className="lg:w-64 shrink-0">
+            <CategorySidebar
+              categories={CATEGORIES}
+              selectedCategory={selectedCategory}
+              onSelectCategory={setSelectedCategory}
+              onClearSearch={handleClearSearch}
             />
-          ))}
-        </section>
+          </aside>
+
+          {/* Products Grid */}
+          <section className="flex-1 grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-8">
+            {filteredProducts.map((product) => (
+              <ProductCard
+                key={product.id}
+                product={product}
+                onAddToCart={addToCart}
+                isComparing={compareIds.includes(product.id)}
+                onToggleCompare={(id) => {
+                  setCompareIds(prev =>
+                    prev.includes(id)
+                      ? prev.filter(i => i !== id)
+                      : prev.length < 3 ? [...prev, id] : prev
+                  );
+                }}
+              />
+            ))}
+          </section>
+        </div>
 
         <TeamSection members={TEAM_MEMBERS} />
         <AboutSection />
@@ -245,6 +320,13 @@ function AppContent() {
         isOpen={isTopUpOpen}
         onClose={() => setIsTopUpOpen(false)}
         user={user}
+      />
+
+      <ComparisonModal
+        isOpen={isComparisonOpen}
+        onClose={() => setIsComparisonOpen(false)}
+        products={allProducts.filter(p => compareIds.includes(p.id))}
+        onRemove={(id) => setCompareIds(prev => prev.filter(i => i !== id))}
       />
     </div>
   );

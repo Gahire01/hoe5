@@ -46,7 +46,14 @@ export interface Employee {
   email: string;
   phone?: string;
   role: string;
-  social?: { linkedin?: string; twitter?: string; github?: string };
+  social?: {
+    linkedin?: string;
+    twitter?: string;
+    instagram?: string;
+    tiktok?: string;
+    facebook?: string;
+    github?: string;
+  };
   image?: string;
 }
 
