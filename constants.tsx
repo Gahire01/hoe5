@@ -36,6 +36,7 @@ export const CONTACT_INFO = {
   email: 'homeofelectronics20@gmail.com',
   adminEmail: 'homeofelectronics20@gmail.com',
   adminPassword: '234456',
+  whatsapp: '250780615795',
 };
 
 export const CATEGORIES: Category[] = [
@@ -88,9 +89,21 @@ export const TEAM_MEMBERS: TeamMember[] = [
     phone: '+250 781 234 567',
     social: { linkedin: '#', twitter: '#', github: '#' },
   },
-  // ... other members
 ];
 
+// Placeholder products – you can keep your existing ones
 export const PRODUCTS: Product[] = [
-  // ... your existing products (unchanged)
+  {
+    id: '1',
+    name: 'iPhone 15 Pro Max',
+    price: 1399000,
+    originalPrice: 1599000,
+    category: 'Smartphone',
+    image: 'https://images.unsplash.com/photo-1696446701796-da61225697cc?auto=format&fit=crop&w=600',
+    rating: 5,
+    isNew: true,
+    stock: 12,
+    specs: { Processor: 'A17 Pro', RAM: '8GB', Storage: '256GB' },
+  },
+  // ... add more as needed
 ];

@@ -1,89 +1,135 @@
 import React, { useState, useRef } from 'react';
-import { X, Camera, Send, Upload } from 'lucide-react';
-import { User } from '../types';
-import { db } from '../firebase';
-import { collection, addDoc } from 'firebase/firestore';
+import { X, Upload, Send, Loader2, AlertCircle, CheckCircle2 } from 'lucide-react';
+import { supabase } from '../supabase';
+import { uploadMultipleToSupabase, validateImageFile } from '../storageService';
 import { CONTACT_INFO } from '../constants';
-import { uploadMultipleToImgBB, validateImageFile } from '../services/imgbbService';
+import { useAuth } from '../hooks/useAuth';
 
 interface Props {
   isOpen: boolean;
   onClose: () => void;
-  user: User | null;
 }
 
-const TopUpModal: React.FC<Props> = ({ isOpen, onClose, user }) => {
-  const [step, setStep] = useState(1);
-  const [phone, setPhone] = useState('');
-  const [model, setModel] = useState('');
-  const [images, setImages] = useState<File[]>([]);
+const TopUpModal: React.FC<Props> = ({ isOpen, onClose }) => {
+  const { user } = useAuth();
+  const [amount, setAmount] = useState('');
+  const [phone, setPhone] = useState(user?.phone || '');
   const [message, setMessage] = useState('');
+  const [images, setImages] = useState<File[]>([]);
   const [uploading, setUploading] = useState(false);
-  const [uploadError, setUploadError] = useState('');
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const submittingRef = useRef(false);
 
   if (!isOpen) return null;
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
-    setUploadError('');
-
+    setError(null);
     try {
+      // Validate each file
       files.forEach(file => validateImageFile(file));
-      setImages(prev => [...prev, ...files]);
-    } catch (error: any) {
-      setUploadError(error.message);
+
+      // Check for duplicates (by name and size)
+      const newFiles = files.filter(file =>
+        !images.some(img => img.name === file.name && img.size === file.size)
+      );
+      if (newFiles.length < files.length) {
+        setError('Some images are duplicates and were ignored.');
+      }
+
+      // Enforce min 4 and max 6 images
+      if (images.length + newFiles.length < 4) {
+        setError('Please upload at least 4 proof images.');
+        return;
+      }
+      if (images.length + newFiles.length > 6) {
+        setError('Maximum 6 images allowed.');
+        return;
+      }
+
+      setImages(prev => [...prev, ...newFiles]);
+    } catch (err: any) {
+      setError(err.message);
     }
   };
 
   const removeImage = (index: number) => {
     setImages(prev => prev.filter((_, i) => i !== index));
+    if (images.length - 1 < 4 && !error?.includes('at least')) {
+      setError('Please upload at least 4 proof images.');
+    }
   };
 
   const handleSubmit = async () => {
     if (!user) {
-      alert('Please sign in to request a top-up');
+      setError('Please sign in to request a top-up.');
       return;
     }
-
-    if (!phone || !model) {
-      alert('Please fill in all required fields');
+    if (!amount || !phone) {
+      setError('Amount and phone number are required.');
       return;
     }
+    if (images.length < 4) {
+      setError('Please upload at least 4 proof images.');
+      return;
+    }
+    if (images.length > 6) {
+      setError('Maximum 6 images allowed.');
+      return;
+    }
+    if (submittingRef.current) return; // Prevent double submission
+    submittingRef.current = true;
 
     setUploading(true);
-    setUploadError('');
+    setError(null);
 
     try {
-      // Upload images to ImgBB
-      let imageUrls: string[] = [];
-      if (images.length > 0) {
-        imageUrls = await uploadMultipleToImgBB(images);
-      }
+      // Upload images to Supabase Storage (concurrency limited inside the service)
+      const imageUrls = await uploadMultipleToSupabase(images, 'topup');
 
-      // Save to Firestore
-      const request = {
-        userId: user.uid,
-        userName: user.name,
+      // Save to topup_requests table
+      const requestData = {
+        user_id: user.id,
+        user_name: user.name,
         phone,
-        model,
+        amount: parseFloat(amount),
         images: imageUrls,
         message,
         status: 'pending',
-        createdAt: new Date(),
+        created_at: new Date(),
       };
 
-      await addDoc(collection(db, 'topupRequests'), request);
+      const { error: dbError } = await supabase
+        .from('topup_requests')
+        .insert([requestData]);
+      if (dbError) throw dbError;
 
       // Send WhatsApp message to admin
-      const text = `*TOP-UP REQUEST*\n\n*Name:* ${user.name}\n*Phone:* ${phone}\n*Model:* ${model}\n*Message:* ${message}\n\n*Images:*\n${imageUrls.join('\n')}`;
-      const whatsappUrl = `https://wa.me/${CONTACT_INFO.phone.replace(/\s+/g, '').replace('+', '')}?text=${encodeURIComponent(text)}`;
-      window.open(whatsappUrl, '_blank');
+      const waMessage = encodeURIComponent(
+        `*TOP-UP REQUEST*\n\n` +
+        `*Name:* ${requestData.user_name}\n` +
+        `*Phone:* ${phone}\n` +
+        `*Amount:* ${amount} RWF\n` +
+        `*Message:* ${message}\n\n` +
+        `*Proof Images:*\n${imageUrls.join('\n')}`
+      );
+      window.open(`https://wa.me/${CONTACT_INFO.whatsapp}?text=${waMessage}`, '_blank');
 
-      onClose();
-      alert('Request sent successfully!');
+      setSuccess(true);
+      setTimeout(() => {
+        onClose();
+        setSuccess(false);
+        setAmount('');
+        setPhone('');
+        setMessage('');
+        setImages([]);
+        submittingRef.current = false;
+      }, 3000);
     } catch (err: any) {
-      setUploadError(err.message || 'Failed to submit request. Please try again.');
+      setError(err.message || 'Upload failed. Please try again.');
+      submittingRef.current = false;
     } finally {
       setUploading(false);
     }
@@ -92,119 +138,113 @@ const TopUpModal: React.FC<Props> = ({ isOpen, onClose, user }) => {
   return (
     <div className="fixed inset-0 z-[70] flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-black/80 backdrop-blur-md" onClick={onClose} />
-      <div className="relative w-full max-w-md bg-white rounded-3xl shadow-2xl animate-in fade-in zoom-in duration-300">
+      <div className="relative w-full max-w-md bg-white rounded-3xl shadow-2xl animate-in fade-in zoom-in duration-300 max-h-[90vh] overflow-y-auto">
         <button onClick={onClose} className="absolute top-4 right-4 p-2 bg-slate-100 rounded-full hover:bg-slate-200">
           <X size={20} />
         </button>
 
         <div className="p-6">
-          <h2 className="text-2xl font-black text-slate-900 mb-2">Request Top-Up</h2>
-          <p className="text-sm text-slate-500 mb-6">Tell us about your device, and we'll get back to you on WhatsApp.</p>
-
-          {step === 1 && (
-            <div className="space-y-4">
-              <input
-                type="tel"
-                placeholder="Your phone number *"
-                value={phone}
-                onChange={e => setPhone(e.target.value)}
-                className="w-full border border-slate-200 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-cyan-500"
-                required
-              />
-              <input
-                type="text"
-                placeholder="Phone model (e.g., iPhone 12) *"
-                value={model}
-                onChange={e => setModel(e.target.value)}
-                className="w-full border border-slate-200 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-cyan-500"
-                required
-              />
-              <textarea
-                placeholder="Additional details (optional)"
-                value={message}
-                onChange={e => setMessage(e.target.value)}
-                rows={3}
-                className="w-full border border-slate-200 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-cyan-500"
-              />
-              <button
-                onClick={() => setStep(2)}
-                className="w-full bg-cyan-500 text-white py-4 rounded-xl font-black hover:bg-cyan-600 transition"
-              >
-                Next: Add Photos
-              </button>
-            </div>
-          )}
-
-          {step === 2 && (
-            <div className="space-y-4">
-              <div
-                onClick={() => fileInputRef.current?.click()}
-                className="border-2 border-dashed border-slate-200 rounded-xl p-8 text-center cursor-pointer hover:border-cyan-500 transition"
-              >
-                <Upload size={32} className="mx-auto text-slate-400 mb-2" />
-                <p className="text-sm text-slate-500">Click to upload photos of your device</p>
-                <p className="text-xs text-slate-400 mt-1">JPEG, PNG, GIF up to 32MB</p>
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  multiple
-                  accept="image/*"
-                  onChange={handleFileSelect}
-                  className="hidden"
-                />
+          {success ? (
+            <div className="text-center py-8">
+              <div className="w-16 h-16 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <CheckCircle2 className="w-8 h-8 text-emerald-600" />
               </div>
+              <h2 className="text-2xl font-black mb-2">Request Sent!</h2>
+              <p className="text-slate-500">We'll contact you shortly via WhatsApp.</p>
+            </div>
+          ) : (
+            <>
+              <h2 className="text-2xl font-black text-slate-900 mb-2">Request Top-Up</h2>
+              <p className="text-sm text-slate-500 mb-6">Upload 4‑6 proof images. We'll confirm via WhatsApp.</p>
 
-              {uploadError && (
-                <p className="text-red-500 text-xs">{uploadError}</p>
-              )}
-
-              {images.length > 0 && (
-                <div className="space-y-2">
-                  <p className="text-xs font-black text-slate-700">Selected images ({images.length})</p>
-                  <div className="flex flex-wrap gap-2 max-h-40 overflow-y-auto p-2">
-                    {images.map((img, i) => (
-                      <div key={i} className="relative group">
-                        <div className="w-16 h-16 bg-slate-100 rounded-lg overflow-hidden">
-                          <img src={URL.createObjectURL(img)} alt="preview" className="w-full h-full object-cover" />
-                        </div>
-                        <button
-                          onClick={() => removeImage(i)}
-                          className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition"
-                        >
-                          <X size={12} />
-                        </button>
-                      </div>
-                    ))}
-                  </div>
+              {error && (
+                <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-xl flex items-center gap-2 text-red-600 text-xs">
+                  <AlertCircle size={14} />
+                  {error}
                 </div>
               )}
 
-              <div className="flex gap-3">
-                <button
-                  onClick={() => setStep(1)}
-                  className="flex-1 bg-slate-100 text-slate-700 py-3 rounded-xl font-bold hover:bg-slate-200"
-                  disabled={uploading}
+              <div className="space-y-4">
+                <input
+                  type="number"
+                  placeholder="Amount (RWF) *"
+                  value={amount}
+                  onChange={e => setAmount(e.target.value)}
+                  className="w-full border border-slate-200 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-cyan-500"
+                  required
+                />
+                <input
+                  type="tel"
+                  placeholder="Your phone number *"
+                  value={phone}
+                  onChange={e => setPhone(e.target.value)}
+                  className="w-full border border-slate-200 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-cyan-500"
+                  required
+                />
+                <textarea
+                  placeholder="Additional details (optional)"
+                  value={message}
+                  onChange={e => setMessage(e.target.value)}
+                  rows={2}
+                  className="w-full border border-slate-200 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-cyan-500"
+                />
+
+                <div
+                  onClick={() => fileInputRef.current?.click()}
+                  className="border-2 border-dashed border-slate-200 rounded-xl p-4 text-center cursor-pointer hover:border-cyan-500 transition"
                 >
-                  Back
-                </button>
+                  <Upload size={24} className="mx-auto text-slate-400 mb-2" />
+                  <p className="text-sm text-slate-500">Click to upload proof images (4‑6 images)</p>
+                  <p className="text-xs text-slate-400 mt-1">JPEG, PNG, GIF up to 32MB</p>
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    multiple
+                    accept="image/*"
+                    onChange={handleFileSelect}
+                    className="hidden"
+                  />
+                </div>
+
+                {images.length > 0 && (
+                  <div className="space-y-2">
+                    <p className="text-xs font-black text-slate-700">Selected images ({images.length}/6)</p>
+                    <div className="flex flex-wrap gap-2 max-h-40 overflow-y-auto p-2">
+                      {images.map((img, i) => (
+                        <div key={i} className="relative group">
+                          <div className="w-16 h-16 bg-slate-100 rounded-lg overflow-hidden">
+                            <img src={URL.createObjectURL(img)} alt="preview" className="w-full h-full object-cover" />
+                          </div>
+                          <button
+                            onClick={() => removeImage(i)}
+                            className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition"
+                          >
+                            <X size={12} />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
                 <button
                   onClick={handleSubmit}
-                  disabled={uploading || !phone || !model}
-                  className="flex-1 bg-emerald-500 text-white py-3 rounded-xl font-black hover:bg-emerald-600 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                  disabled={uploading || images.length < 4 || images.length > 6}
+                  className="w-full bg-cyan-500 text-white py-4 rounded-xl font-black hover:bg-cyan-600 transition disabled:opacity-50 flex items-center justify-center gap-2"
                 >
                   {uploading ? (
                     <>
-                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                      <Loader2 className="w-4 h-4 animate-spin" />
                       Uploading...
                     </>
                   ) : (
                     <>
-                      <Send size={16} /> Send Request
+                      <Send size={16} /> Submit Request
                     </>
                   )}
                 </button>
               </div>
-            </div>
+            </>
           )}
         </div>
       </div>
