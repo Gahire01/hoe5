@@ -1,11 +1,9 @@
 import React, { useState, useRef } from 'react';
-import {
-  X, Upload, AlertCircle, Loader2, CheckCircle, ImagePlus, User
-} from 'lucide-react';
+import { X, Upload, AlertCircle, Loader2, CheckCircle, ImagePlus, User } from 'lucide-react';
 import { supabase } from '../supabase';
 import { uploadFileToSupabase, validateImageFile } from '../storageService';
 import { CONTACT_INFO } from '../constants';
-import { useAuth } from '../hooks/useAuth';
+import { useAuth } from '../context/AuthContext';
 
 interface Props {
   isOpen: boolean;
@@ -80,7 +78,6 @@ const TopUpModal: React.FC<Props> = ({ isOpen, onClose, user }) => {
     setProgress(0);
 
     try {
-      // Upload images one by one to avoid auth lock conflicts
       const imageUrls: string[] = [];
       for (let i = 0; i < images.length; i++) {
         const url = await uploadFileToSupabase(
@@ -96,7 +93,6 @@ const TopUpModal: React.FC<Props> = ({ isOpen, onClose, user }) => {
 
       setProgress(100);
 
-      // Build WhatsApp message with clickable image links
       const imageLines = imageUrls
         .map((url, i) => `📸 Image ${i + 1}: ${url}`)
         .join('\n');
@@ -178,7 +174,6 @@ const TopUpModal: React.FC<Props> = ({ isOpen, onClose, user }) => {
               </div>
             )}
 
-            {/* Sign‑in prompt */}
             {!authUser && (
               <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 text-center">
                 <p className="text-sm text-amber-800 font-medium mb-3">

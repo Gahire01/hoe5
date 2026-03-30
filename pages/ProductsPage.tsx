@@ -1,19 +1,15 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useProducts } from '../hooks/useProducts';
-import { useCart } from '../hooks/useCart';
-import { useAuth } from '../hooks/useAuth';
+import { useCart } from '../context/CartContext';
 import ProductCard from '../components/ProductCard';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
-import AuthModal from '../components/AuthModal';
 import CartDrawer from '../components/CartDrawer';
 import { Filter, X } from 'lucide-react';
 import { CATEGORIES } from '../constants';
 
 const ProductsPage: React.FC = () => {
-  const { user } = useAuth();
-  const { isAuthModalOpen, closeAuthModal } = useAuth();
   const [searchParams, setSearchParams] = useSearchParams();
   const [searchQuery, setSearchQuery] = useState('');
   const [suggestions, setSuggestions] = useState<string[]>([]);
@@ -21,7 +17,7 @@ const ProductsPage: React.FC = () => {
   const [sortBy, setSortBy] = useState<'price-asc' | 'price-desc' | 'newest' | 'rating'>('newest');
 
   const { products } = useProducts();
-  const { cartItems, addToCart, removeFromCart, updateQuantity, cartCount, isCartOpen, setIsCartOpen } = useCart();
+  const { cartItems, addToCart, removeFromCart, updateQuantity, isCartOpen, setIsCartOpen } = useCart();
 
   // URL sync
   useEffect(() => {
@@ -107,7 +103,6 @@ const ProductsPage: React.FC = () => {
         </div>
       </main>
       <Footer />
-      <AuthModal isOpen={isAuthModalOpen} onClose={closeAuthModal} />
       <CartDrawer isOpen={isCartOpen} onClose={() => setIsCartOpen(false)} items={cartItems} onRemove={removeFromCart} onUpdateQty={updateQuantity} />
     </div>
   );
