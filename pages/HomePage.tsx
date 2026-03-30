@@ -6,7 +6,6 @@ import ProductCard from '../components/ProductCard';
 import AIChatBot from '../components/AIChatBot';
 import WhatsAppButton from '../components/WhatsAppButton';
 import Footer from '../components/Footer';
-import AuthModal from '../components/AuthModal';
 import CartDrawer from '../components/CartDrawer';
 import AdminPanel from '../components/AdminPanel';
 import AboutSection from '../components/AboutSection';
@@ -14,13 +13,14 @@ import ComparisonModal from '../components/ComparisonModal';
 import TeamSection from '../components/TeamSection';
 import TopUpModal from '../components/TopUpModal';
 import { useProducts } from '../hooks/useProducts';
-import { useCart } from '../hooks/useCart';
-import { useAuth } from '../hooks/useAuth';
+import { useCart } from '../context/CartContext';
+import { useAuth } from '../context/AuthContext';
 import { useEmployees } from '../hooks/useEmployees';
 import { ArrowRight } from 'lucide-react';
 
 const HomePage: React.FC = () => {
-  const { user, loading: authLoading, logout, isAuthModalOpen, closeAuthModal } = useAuth();
+  const { user } = useAuth();
+  const { cartItems, addToCart, removeFromCart, updateQuantity, isCartOpen, setIsCartOpen } = useCart();
   const [isTopUpOpen, setIsTopUpOpen] = useState(false);
   const [compareIds, setCompareIds] = useState<string[]>([]);
   const [isComparisonOpen, setIsComparisonOpen] = useState(false);
@@ -30,7 +30,6 @@ const HomePage: React.FC = () => {
   const footerRef = useRef<HTMLDivElement>(null);
 
   const { products, addProduct, updateProduct, deleteProduct } = useProducts();
-  const { cartItems, addToCart, removeFromCart, updateQuantity, cartCount, isCartOpen, setIsCartOpen } = useCart();
   const { employees, loading: employeesLoading, addEmployee, updateEmployee, deleteEmployee } = useEmployees();
 
   useEffect(() => {
@@ -107,7 +106,6 @@ const HomePage: React.FC = () => {
         </>
       )}
 
-      <AuthModal isOpen={isAuthModalOpen} onClose={closeAuthModal} />
       <CartDrawer
         isOpen={isCartOpen}
         onClose={() => setIsCartOpen(false)}

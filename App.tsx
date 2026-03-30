@@ -12,9 +12,10 @@ import Refund from './pages/Refund';
 import Shipping from './pages/Shipping';
 import Affiliate from './pages/Affiliate';
 import AuthModal from './components/AuthModal';
-import { useAuth } from './hooks/useAuth';
+import { AuthProvider, useAuth } from './context/AuthContext';
+import { CartProvider } from './context/CartContext';
 
-const App: React.FC = () => {
+const AppContent: React.FC = () => {
   const { isAuthModalOpen, closeAuthModal } = useAuth();
 
   return (
@@ -36,5 +37,13 @@ const App: React.FC = () => {
     </BrowserRouter>
   );
 };
+
+const App: React.FC = () => (
+  <AuthProvider>
+    <CartProvider>
+      <AppContent />
+    </CartProvider>
+  </AuthProvider>
+);
 
 export default App;

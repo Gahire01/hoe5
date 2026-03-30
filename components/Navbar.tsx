@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Menu, X, Zap, ShoppingCart, User, LogOut } from 'lucide-react';
-import { useAuth } from '../hooks/useAuth';
-import { useCart } from '../hooks/useCart';
+import { useAuth } from '../context/AuthContext';
+import { useCart } from '../context/CartContext';
 
 const NAV_LINKS = [
   { label: 'Home', path: '/' },
