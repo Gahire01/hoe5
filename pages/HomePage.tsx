@@ -20,8 +20,7 @@ import { useEmployees } from '../hooks/useEmployees';
 import { ArrowRight } from 'lucide-react';
 
 const HomePage: React.FC = () => {
-  const { user, loading: authLoading, logout } = useAuth();
-  const [isAuthOpen, setIsAuthOpen] = useState(false);
+  const { user, loading: authLoading, logout, isAuthModalOpen, closeAuthModal } = useAuth();
   const [isTopUpOpen, setIsTopUpOpen] = useState(false);
   const [compareIds, setCompareIds] = useState<string[]>([]);
   const [isComparisonOpen, setIsComparisonOpen] = useState(false);
@@ -49,16 +48,7 @@ const HomePage: React.FC = () => {
 
   return (
     <div className="min-h-screen flex flex-col bg-slate-50">
-      <Navbar
-        cartCount={cartCount}
-        onSearch={() => {}}
-        onOpenCart={() => setIsCartOpen(true)}
-        onOpenAuth={() => setIsAuthOpen(true)}
-        user={user}
-        loading={authLoading}
-        onLogout={logout}
-      />
-
+      <Navbar />
       <main className="flex-1 max-w-7xl mx-auto w-full px-4 py-12 space-y-24">
         <div ref={heroRef}><Hero /></div>
 
@@ -105,7 +95,6 @@ const HomePage: React.FC = () => {
         </section>
 
         <TeamSection employees={employees} />
-
         <AboutSection />
       </main>
 
@@ -118,7 +107,7 @@ const HomePage: React.FC = () => {
         </>
       )}
 
-      <AuthModal isOpen={isAuthOpen} onClose={() => setIsAuthOpen(false)} />
+      <AuthModal isOpen={isAuthModalOpen} onClose={closeAuthModal} />
       <CartDrawer
         isOpen={isCartOpen}
         onClose={() => setIsCartOpen(false)}
@@ -126,7 +115,7 @@ const HomePage: React.FC = () => {
         onRemove={removeFromCart}
         onUpdateQty={updateQuantity}
       />
-      <TopUpModal isOpen={isTopUpOpen} onClose={() => setIsTopUpOpen(false)} />
+      <TopUpModal isOpen={isTopUpOpen} onClose={() => setIsTopUpOpen(false)} user={user} />
       <ComparisonModal
         isOpen={isComparisonOpen}
         onClose={() => setIsComparisonOpen(false)}
