@@ -1,17 +1,23 @@
 import { useState, useEffect } from 'react';
-import { Product, CartItem } from '../types';
+import { CartItem, Product } from '../types';
+
+const CART_STORAGE_KEY = 'hoe_cart';
 
 export const useCart = () => {
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [isCartOpen, setIsCartOpen] = useState(false);
 
   useEffect(() => {
-    const savedCart = localStorage.getItem('cart');
-    if (savedCart) setCartItems(JSON.parse(savedCart));
+    const stored = localStorage.getItem(CART_STORAGE_KEY);
+    if (stored) {
+      try {
+        setCartItems(JSON.parse(stored));
+      } catch (e) {}
+    }
   }, []);
 
   useEffect(() => {
-    localStorage.setItem('cart', JSON.stringify(cartItems));
+    localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(cartItems));
   }, [cartItems]);
 
   const addToCart = (product: Product) => {
@@ -24,7 +30,6 @@ export const useCart = () => {
       }
       return [...prev, { ...product, quantity: 1 }];
     });
-    setIsCartOpen(true);
   };
 
   const removeFromCart = (id: string) => {
@@ -33,13 +38,15 @@ export const useCart = () => {
 
   const updateQuantity = (id: string, delta: number) => {
     setCartItems(prev =>
-      prev.map(item =>
-        item.id === id ? { ...item, quantity: Math.max(1, item.quantity + delta) } : item
-      )
+      prev.map(item => {
+        if (item.id !== id) return item;
+        const newQty = item.quantity + delta;
+        return newQty <= 0 ? null : { ...item, quantity: newQty };
+      }).filter(Boolean) as CartItem[]
     );
   };
 
-  const cartCount = cartItems.reduce((acc, item) => acc + item.quantity, 0);
+  const cartCount = cartItems.reduce((sum, item) => sum + item.quantity, 0);
 
   return {
     cartItems,

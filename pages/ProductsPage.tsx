@@ -12,8 +12,8 @@ import { Filter, X } from 'lucide-react';
 import { CATEGORIES } from '../constants';
 
 const ProductsPage: React.FC = () => {
-  const { user, loading: authLoading, logout } = useAuth();
-  const [isAuthOpen, setIsAuthOpen] = useState(false);
+  const { user } = useAuth();
+  const { isAuthModalOpen, closeAuthModal } = useAuth();
   const [searchParams, setSearchParams] = useSearchParams();
   const [searchQuery, setSearchQuery] = useState('');
   const [suggestions, setSuggestions] = useState<string[]>([]);
@@ -57,15 +57,7 @@ const ProductsPage: React.FC = () => {
 
   return (
     <div className="min-h-screen flex flex-col bg-slate-50">
-      <Navbar
-        cartCount={cartCount}
-        onSearch={setSearchQuery}
-        onOpenCart={() => setIsCartOpen(true)}
-        onOpenAuth={() => setIsAuthOpen(true)}
-        user={user}
-        loading={authLoading}
-        onLogout={logout}
-      />
+      <Navbar />
       {suggestions.length > 0 && (
         <div className="absolute top-[92px] left-1/2 -translate-x-1/2 w-full max-w-xl z-40">
           <div className="bg-white border border-slate-200 rounded-xl shadow-lg overflow-hidden">
@@ -115,7 +107,7 @@ const ProductsPage: React.FC = () => {
         </div>
       </main>
       <Footer />
-      <AuthModal isOpen={isAuthOpen} onClose={() => setIsAuthOpen(false)} />
+      <AuthModal isOpen={isAuthModalOpen} onClose={closeAuthModal} />
       <CartDrawer isOpen={isCartOpen} onClose={() => setIsCartOpen(false)} items={cartItems} onRemove={removeFromCart} onUpdateQty={updateQuantity} />
     </div>
   );

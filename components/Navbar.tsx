@@ -1,15 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Menu, X, Zap, ShoppingCart, User, LogOut } from 'lucide-react';
-import { User as UserType } from '../types';
-
-interface NavbarProps {
-  user: UserType | null;
-  cartCount?: number;
-  onCartOpen?: () => void;
-  onAuthOpen?: () => void;
-  onLogout?: () => void;
-}
+import { useAuth } from '../hooks/useAuth';
+import { useCart } from '../hooks/useCart';
 
 const NAV_LINKS = [
   { label: 'Home', path: '/' },
@@ -20,13 +13,9 @@ const NAV_LINKS = [
   { label: 'Support', path: '/support' },
 ];
 
-const Navbar: React.FC<NavbarProps> = ({
-  user,
-  cartCount = 0,
-  onCartOpen,
-  onAuthOpen,
-  onLogout,
-}) => {
+const Navbar: React.FC = () => {
+  const { user, logout, openAuthModal } = useAuth();
+  const { cartCount, setIsCartOpen } = useCart();
   const [open, setOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const location = useLocation();
@@ -37,7 +26,6 @@ const Navbar: React.FC<NavbarProps> = ({
     return () => window.removeEventListener('scroll', onScroll);
   }, []);
 
-  // Close mobile menu on route change
   useEffect(() => setOpen(false), [location.pathname]);
 
   const isActive = (path: string) =>
@@ -45,7 +33,6 @@ const Navbar: React.FC<NavbarProps> = ({
 
   return (
     <>
-      {/* ── Desktop / Tablet Navbar ── */}
       <header
         className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
           scrolled
@@ -55,7 +42,6 @@ const Navbar: React.FC<NavbarProps> = ({
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6">
           <div className="flex items-center justify-between h-16 sm:h-18">
-
             {/* Logo */}
             <Link to="/" className="flex items-center gap-2 flex-shrink-0 group">
               <div className="w-8 h-8 bg-cyan-400 rounded-lg flex items-center justify-center shadow-lg shadow-cyan-500/30 group-hover:scale-110 transition-transform">
@@ -90,7 +76,7 @@ const Navbar: React.FC<NavbarProps> = ({
             <div className="flex items-center gap-2">
               {/* Cart */}
               <button
-                onClick={onCartOpen}
+                onClick={() => setIsCartOpen(true)}
                 className="relative p-2 text-slate-300 hover:text-white hover:bg-white/10 rounded-lg transition-all"
                 aria-label="Cart"
               >
@@ -124,7 +110,7 @@ const Navbar: React.FC<NavbarProps> = ({
                     </Link>
                   )}
                   <button
-                    onClick={onLogout}
+                    onClick={logout}
                     className="p-2 text-slate-400 hover:text-red-400 hover:bg-red-400/10 rounded-lg transition-all"
                     title="Logout"
                   >
@@ -133,7 +119,7 @@ const Navbar: React.FC<NavbarProps> = ({
                 </div>
               ) : (
                 <button
-                  onClick={onAuthOpen}
+                  onClick={openAuthModal}
                   className="hidden sm:flex items-center gap-1.5 text-sm font-bold text-slate-900 bg-cyan-400 px-4 py-2 rounded-lg hover:bg-cyan-300 transition shadow-lg shadow-cyan-500/20"
                 >
                   <User size={14} />
@@ -154,27 +140,23 @@ const Navbar: React.FC<NavbarProps> = ({
         </div>
       </header>
 
-      {/* ── Mobile Drawer ── */}
+      {/* Mobile Drawer */}
       <div
         className={`fixed inset-0 z-40 lg:hidden transition-all duration-300 ${
           open ? 'pointer-events-auto' : 'pointer-events-none'
         }`}
       >
-        {/* Backdrop */}
         <div
           className={`absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity duration-300 ${
             open ? 'opacity-100' : 'opacity-0'
           }`}
           onClick={() => setOpen(false)}
         />
-
-        {/* Drawer panel */}
         <div
           className={`absolute top-0 right-0 h-full w-72 bg-slate-900 shadow-2xl flex flex-col transition-transform duration-300 ease-out ${
             open ? 'translate-x-0' : 'translate-x-full'
           }`}
         >
-          {/* Drawer header */}
           <div className="flex items-center justify-between px-6 py-5 border-b border-white/10">
             <div className="flex items-center gap-2">
               <div className="w-7 h-7 bg-cyan-400 rounded-lg flex items-center justify-center">
@@ -190,7 +172,6 @@ const Navbar: React.FC<NavbarProps> = ({
             </button>
           </div>
 
-          {/* User info (mobile) */}
           {user && (
             <div className="px-6 py-4 border-b border-white/10 bg-white/5">
               <div className="flex items-center gap-3">
@@ -207,7 +188,6 @@ const Navbar: React.FC<NavbarProps> = ({
             </div>
           )}
 
-          {/* Nav links */}
           <nav className="flex-1 overflow-y-auto px-3 py-4 space-y-1">
             {NAV_LINKS.map(({ label, path }) => (
               <Link
@@ -240,11 +220,10 @@ const Navbar: React.FC<NavbarProps> = ({
             )}
           </nav>
 
-          {/* Bottom actions */}
           <div className="px-4 py-5 border-t border-white/10 space-y-2">
             {user ? (
               <button
-                onClick={() => { onLogout?.(); setOpen(false); }}
+                onClick={() => { logout(); setOpen(false); }}
                 className="w-full flex items-center justify-center gap-2 py-3 rounded-xl border border-red-400/30 text-red-400 font-semibold text-sm hover:bg-red-400/10 transition"
               >
                 <LogOut size={15} />
@@ -252,7 +231,7 @@ const Navbar: React.FC<NavbarProps> = ({
               </button>
             ) : (
               <button
-                onClick={() => { onAuthOpen?.(); setOpen(false); }}
+                onClick={() => { openAuthModal(); setOpen(false); }}
                 className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-cyan-400 text-slate-900 font-black text-sm hover:bg-cyan-300 transition shadow-lg"
               >
                 <User size={15} />
@@ -263,7 +242,6 @@ const Navbar: React.FC<NavbarProps> = ({
         </div>
       </div>
 
-      {/* Spacer so content isn't hidden under navbar */}
       <div className="h-16 sm:h-18" />
     </>
   );
