@@ -1,13 +1,14 @@
 import { IconType } from 'react-icons';
 
-export type UserRole = 'user' | 'admin' | 'guest';
+export type UserRole = 'user' | 'admin';
 
 export interface User {
-  uid: string;
+  id: string;
   name: string;
   email: string;
   role: UserRole;
   avatar?: string;
+  phone?: string;
 }
 
 export interface Category {
@@ -18,7 +19,7 @@ export interface Category {
 
 export interface Supplier {
   name: string;
-  logo: string; // icon component name, but we'll keep as string for simplicity
+  icon: IconType;
 }
 
 export interface PaymentMethod {
@@ -38,6 +39,7 @@ export interface Product {
   isNew?: boolean;
   stock: number;
   specs: Record<string, string>;
+  created_at?: string;
 }
 
 export interface Employee {
@@ -55,18 +57,19 @@ export interface Employee {
     github?: string;
   };
   image?: string;
+  created_at?: string;
 }
 
 export interface TopUpRequest {
   id: string;
-  userId: string;
-  userName: string;
+  user_id: string;
+  user_name: string;
   phone: string;
-  model: string;
+  amount: number;
   images: string[];
   message: string;
   status: 'pending' | 'in-progress' | 'completed';
-  createdAt: Date;
+  created_at: Date;
 }
 
 export interface FeaturedService {

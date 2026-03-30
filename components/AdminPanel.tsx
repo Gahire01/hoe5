@@ -1,167 +1,244 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useRef, useCallback } from 'react';
 import { Product, Employee } from '../types';
 import {
   Plus, Package, Tag, DollarSign, Layers, Image as ImageIcon,
-  Cpu, BarChart, Trash2, UserPlus, Users, Instagram, Twitter,
-  Github, Linkedin, Facebook, Edit, X, Save
+  Cpu, BarChart, Trash2, UserPlus, Users,
+  Edit, X, Save, Upload, Loader2, CheckCircle, AlertCircle, ImagePlus
 } from 'lucide-react';
-import { db } from '../firebase';
-import { collection, addDoc, deleteDoc, doc, getDocs, updateDoc } from 'firebase/firestore';
-import { uploadToImgBB, validateImageFile } from '../services/imgbbService';
+import { supabase } from '../supabase';
+import { uploadFileToSupabase, validateImageFile } from '../storageService';
+import { useAuth } from '../hooks/useAuth';
 
 interface Props {
+  products: Product[];
   onAdd: (p: Product) => void;
   onUpdate: (id: string, updates: Partial<Product>) => void;
   onDelete: (id: string) => void;
-  products: Product[];
   totalProducts: number;
   lowStockCount: number;
   newProductsCount: number;
   userRole: string;
+  employees: Employee[];
+  onAddEmployee: (emp: Omit<Employee, 'id' | 'created_at'>) => Promise<any>;
+  onUpdateEmployee: (id: string, updates: Partial<Employee>) => Promise<any>;
+  onDeleteEmployee: (id: string) => Promise<any>;
+  employeesLoading: boolean;
 }
 
-const AdminPanel: React.FC<Props> = ({
-  onAdd, onUpdate, onDelete, products,
-  totalProducts, lowStockCount, newProductsCount, userRole
-}) => {
-  const [activeTab, setActiveTab] = useState<'products' | 'employees'>('products');
-  const [employees, setEmployees] = useState<Employee[]>([]);
-  const [uploading, setUploading] = useState(false);
+// ─── Reusable Image Uploader ──────────────────────────────────────────────────
+interface ImageUploaderProps {
+  value: string;
+  onChange: (url: string) => void;
+  folder: string;
+  disabled?: boolean;
+}
+
+type UploadStatus = 'idle' | 'compressing' | 'uploading' | 'done' | 'error';
+
+const ImageUploader: React.FC<ImageUploaderProps> = ({ value, onChange, folder, disabled }) => {
+  const [uploadStatus, setUploadStatus] = useState<UploadStatus>('idle');
+  const [progress, setProgress] = useState(0);
+  const [localPreview, setLocalPreview] = useState<string | null>(null);
   const [uploadError, setUploadError] = useState('');
-  const [submitSuccess, setSubmitSuccess] = useState('');
+  const fileRef = useRef<HTMLInputElement>(null);
+
+  const handleFile = useCallback(async (file: File) => {
+    // Validate
+    try { validateImageFile(file); }
+    catch (e: any) { setUploadError(e.message); setUploadStatus('error'); return; }
+
+    // Show local preview instantly
+    const preview = URL.createObjectURL(file);
+    setLocalPreview(preview);
+    setUploadError('');
+    setUploadStatus('compressing');
+    setProgress(5);
+
+    try {
+      const url = await uploadFileToSupabase(file, folder, (pct) => {
+        setProgress(pct);
+        if (pct > 20) setUploadStatus('uploading');
+      });
+      setUploadStatus('done');
+      setProgress(100);
+      onChange(url);
+      URL.revokeObjectURL(preview);
+      setLocalPreview(null);
+    } catch (e: any) {
+      setUploadStatus('error');
+      setUploadError(e.message ?? 'Upload failed. Try again.');
+      setLocalPreview(null);
+      URL.revokeObjectURL(preview);
+    }
+  }, [folder, onChange]);
+
+  const reset = () => {
+    setUploadStatus('idle');
+    setProgress(0);
+    setUploadError('');
+    setLocalPreview(null);
+  };
+
+  const isLoading = uploadStatus === 'compressing' || uploadStatus === 'uploading';
+  const displayImage = localPreview || value;
+
+  return (
+    <div className="space-y-2">
+      {/* Drop zone / preview */}
+      <div
+        onClick={() => !isLoading && !disabled && fileRef.current?.click()}
+        onDragOver={(e) => e.preventDefault()}
+        onDrop={(e) => { e.preventDefault(); if (!isLoading && !disabled) handleFile(e.dataTransfer.files[0]); }}
+        className={`relative border-2 border-dashed rounded-2xl overflow-hidden transition-all
+          ${isLoading || disabled ? 'cursor-not-allowed opacity-70' : 'cursor-pointer hover:border-cyan-400 hover:bg-cyan-500/5'}
+          ${uploadStatus === 'error' ? 'border-red-500/50' : uploadStatus === 'done' ? 'border-green-500/50' : 'border-slate-700'}`}
+        style={{ minHeight: 120 }}
+      >
+        {displayImage ? (
+          <img src={displayImage} alt="preview" className="w-full h-28 object-cover" />
+        ) : (
+          <div className="flex flex-col items-center justify-center h-28 gap-2">
+            <ImagePlus size={24} className="text-slate-600" />
+            <p className="text-xs text-slate-500 font-medium">Click or drag image</p>
+            <p className="text-[10px] text-slate-600">JPEG · PNG · WebP · max 10 MB</p>
+          </div>
+        )}
+
+        {/* Loading overlay */}
+        {isLoading && (
+          <div className="absolute inset-0 bg-slate-900/70 flex flex-col items-center justify-center gap-2">
+            <Loader2 size={24} className="text-cyan-400 animate-spin" />
+            <span className="text-white text-xs font-bold">
+              {uploadStatus === 'compressing' ? 'Compressing…' : `Uploading ${progress}%`}
+            </span>
+            <div className="w-24 bg-white/20 rounded-full h-1">
+              <div className="h-1 bg-cyan-400 rounded-full transition-all duration-300" style={{ width: `${progress}%` }} />
+            </div>
+          </div>
+        )}
+
+        {/* Done badge */}
+        {uploadStatus === 'done' && (
+          <div className="absolute top-2 right-2 w-6 h-6 bg-green-500 rounded-full flex items-center justify-center">
+            <CheckCircle size={14} className="text-white" />
+          </div>
+        )}
+
+        {/* Clear */}
+        {displayImage && !isLoading && (
+          <button
+            type="button"
+            onClick={(e) => { e.stopPropagation(); reset(); onChange(''); }}
+            className="absolute top-2 left-2 w-5 h-5 bg-slate-900/80 text-white rounded-full flex items-center justify-center hover:bg-red-600 transition"
+          >
+            <X size={10} />
+          </button>
+        )}
+      </div>
+
+      <input
+        ref={fileRef}
+        type="file"
+        accept="image/jpeg,image/png,image/webp,image/gif"
+        className="hidden"
+        onChange={(e) => { if (e.target.files?.[0]) { handleFile(e.target.files[0]); e.target.value = ''; } }}
+        disabled={isLoading || disabled}
+      />
+
+      {/* Error */}
+      {uploadStatus === 'error' && uploadError && (
+        <div className="flex items-start gap-2 text-xs text-red-400 bg-red-500/10 border border-red-500/20 rounded-xl px-3 py-2">
+          <AlertCircle size={13} className="flex-shrink-0 mt-0.5" />
+          <span>{uploadError}</span>
+          <button onClick={reset} className="ml-auto underline text-[10px] font-bold whitespace-nowrap">Retry</button>
+        </div>
+      )}
+    </div>
+  );
+};
+
+// ─── AdminPanel ───────────────────────────────────────────────────────────────
+const AdminPanel: React.FC<Props> = ({
+  products, onAdd, onUpdate, onDelete,
+  totalProducts, lowStockCount, newProductsCount, userRole,
+  employees, onAddEmployee, onUpdateEmployee, onDeleteEmployee, employeesLoading
+}) => {
+  const { user } = useAuth();
+  const [activeTab, setActiveTab] = useState<'products' | 'employees' | 'profile'>('products');
+  const [globalError, setGlobalError] = useState('');
+  const [globalSuccess, setGlobalSuccess] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [editingEmployee, setEditingEmployee] = useState<Employee | null>(null);
 
   const [productForm, setProductForm] = useState({
-    name: '',
-    price: '',
-    originalPrice: '',
-    category: 'Smartphone',
-    image: '',
-    stock: '10',
-    isNew: false,
-    badge: '',
-    specs: '',
+    name: '', price: '', originalPrice: '',
+    category: 'Smartphone', image: '',
+    stock: '10', isNew: false, badge: '', specs: '',
   });
 
   const [employeeForm, setEmployeeForm] = useState({
-    name: '',
-    email: '',
-    phone: '',
-    role: '',
-    linkedin: '',
-    twitter: '',
-    instagram: '',
-    tiktok: '',
-    facebook: '',
-    github: '',
-    image: '',
+    name: '', email: '', phone: '', role: '',
+    linkedin: '', twitter: '', instagram: '',
+    tiktok: '', facebook: '', github: '', image: '',
+  });
+
+  const [profileForm, setProfileForm] = useState({
+    name: user?.name || '', email: user?.email || '',
+    phone: user?.phone || '', avatar: user?.avatar || '',
+    role: user?.role || '',
   });
 
   const badgeOptions = ['New', 'Hot', 'Limited', 'Best Seller', 'Premium', 'Sale', 'Featured'];
 
-  useEffect(() => {
-    fetchEmployees();
-  }, []);
-
-  const fetchEmployees = async () => {
-    try {
-      const querySnapshot = await getDocs(collection(db, 'employees'));
-      const emps: Employee[] = [];
-      querySnapshot.forEach((doc) => {
-        emps.push({ id: doc.id, ...doc.data() } as Employee);
-      });
-      setEmployees(emps);
-    } catch (error) {
-      console.error('Error fetching employees:', error);
-      setUploadError('Failed to load employees.');
-    }
+  const showSuccess = (msg: string) => {
+    setGlobalSuccess(msg);
+    setGlobalError('');
+    setTimeout(() => setGlobalSuccess(''), 3500);
+  };
+  const showError = (msg: string) => {
+    setGlobalError(msg);
+    setGlobalSuccess('');
   };
 
-  const handleImageUpload = async (file: File, target: 'product' | 'employee' | 'editProduct' | 'editEmployee', editId?: string) => {
-    try {
-      validateImageFile(file);
-      setUploading(true);
-      setUploadError('');
-      const url = await uploadToImgBB(file);
-      if (target === 'product') {
-        setProductForm({ ...productForm, image: url });
-      } else if (target === 'employee') {
-        setEmployeeForm({ ...employeeForm, image: url });
-      } else if (target === 'editProduct' && editingProduct) {
-        setEditingProduct({ ...editingProduct, image: url });
-      } else if (target === 'editEmployee' && editingEmployee) {
-        setEditingEmployee({ ...editingEmployee, image: url });
-      }
-    } catch (error: any) {
-      setUploadError(error.message);
-    } finally {
-      setUploading(false);
-    }
-  };
+  const parseSpecs = (s: string): Record<string, string> =>
+    s.trim() ? Object.fromEntries(
+      s.split(',').map(p => p.trim()).filter(p => p.includes(':'))
+        .map(p => p.split(':').map(x => x.trim()) as [string, string])
+        .filter(([k, v]) => k && v)
+    ) : {};
 
-  const parseSpecs = (specsString: string): Record<string, string> => {
-    if (!specsString.trim()) return {};
-    return specsString
-      .split(',')
-      .map(pair => pair.trim())
-      .filter(pair => pair.includes(':'))
-      .reduce((acc, pair) => {
-        const [key, value] = pair.split(':').map(s => s.trim());
-        if (key && value) acc[key] = value;
-        return acc;
-      }, {} as Record<string, string>);
-  };
+  const stringifySpecs = (specs: Record<string, string>) =>
+    Object.entries(specs).map(([k, v]) => `${k}:${v}`).join(', ');
 
-  const stringifySpecs = (specs: Record<string, string>): string => {
-    return Object.entries(specs).map(([k, v]) => `${k}:${v}`).join(', ');
-  };
-
+  // ── Product CRUD ──
   const handleProductSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setUploadError('');
-    setSubmitSuccess('');
+    if (submitting) return;
+    if (!productForm.name || !productForm.price) { showError('Name and price are required.'); return; }
+    if (!productForm.image) { showError('Please upload a product image or enter a URL.'); return; }
+
     setSubmitting(true);
-
-    if (!productForm.name || !productForm.price) {
-      setUploadError('Name and price are required.');
-      setSubmitting(false);
-      return;
-    }
-
     try {
-      const newProduct: Product = {
-        id: `p-${Date.now()}`,
+      const payload = {
         name: productForm.name,
         price: Number(productForm.price),
         originalPrice: productForm.originalPrice ? Number(productForm.originalPrice) : undefined,
         category: productForm.category,
-        image: productForm.image || `https://picsum.photos/seed/${Date.now()}/600/600`,
+        image: productForm.image,
         stock: Number(productForm.stock),
         rating: 5,
         isNew: productForm.isNew,
         badge: productForm.badge || undefined,
         specs: parseSpecs(productForm.specs),
       };
-
-      await addDoc(collection(db, 'products'), newProduct);
-      onAdd(newProduct);
-      setSubmitSuccess('Product added successfully!');
-      setProductForm({
-        name: '',
-        price: '',
-        originalPrice: '',
-        category: 'Smartphone',
-        image: '',
-        stock: '10',
-        isNew: false,
-        badge: '',
-        specs: '',
-      });
-    } catch (error: any) {
-      console.error('Product add error:', error);
-      setUploadError('Failed to add product: ' + (error.message || 'Unknown error'));
+      const { data, error } = await supabase.from('products').insert([payload]).select().single();
+      if (error) throw error;
+      onAdd(data as Product);
+      showSuccess('Product added successfully!');
+      setProductForm({ name: '', price: '', originalPrice: '', category: 'Smartphone', image: '', stock: '10', isNew: false, badge: '', specs: '' });
+    } catch (e: any) {
+      showError('Failed to add product: ' + (e.message ?? 'Unknown error'));
     } finally {
       setSubmitting(false);
     }
@@ -169,29 +246,21 @@ const AdminPanel: React.FC<Props> = ({
 
   const handleUpdateProduct = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!editingProduct) return;
-    setUploadError('');
-    setSubmitSuccess('');
+    if (!editingProduct || submitting) return;
     setSubmitting(true);
-
     try {
-      await updateDoc(doc(db, 'products', editingProduct.id), {
-        name: editingProduct.name,
-        price: editingProduct.price,
-        originalPrice: editingProduct.originalPrice,
-        category: editingProduct.category,
-        image: editingProduct.image,
-        stock: editingProduct.stock,
-        isNew: editingProduct.isNew,
-        badge: editingProduct.badge,
-        specs: editingProduct.specs,
-      });
+      const { error } = await supabase.from('products').update({
+        name: editingProduct.name, price: editingProduct.price,
+        originalPrice: editingProduct.originalPrice, category: editingProduct.category,
+        image: editingProduct.image, stock: editingProduct.stock,
+        isNew: editingProduct.isNew, badge: editingProduct.badge, specs: editingProduct.specs,
+      }).eq('id', editingProduct.id);
+      if (error) throw error;
       onUpdate(editingProduct.id, editingProduct);
-      setSubmitSuccess('Product updated successfully!');
+      showSuccess('Product updated!');
       setEditingProduct(null);
-    } catch (error: any) {
-      console.error('Product update error:', error);
-      setUploadError('Failed to update product: ' + (error.message || 'Unknown error'));
+    } catch (e: any) {
+      showError('Failed to update: ' + (e.message ?? 'Unknown error'));
     } finally {
       setSubmitting(false);
     }
@@ -200,60 +269,35 @@ const AdminPanel: React.FC<Props> = ({
   const handleDeleteProduct = async (id: string) => {
     if (!confirm('Delete this product?')) return;
     try {
-      await deleteDoc(doc(db, 'products', id));
+      const { error } = await supabase.from('products').delete().eq('id', id);
+      if (error) throw error;
       onDelete(id);
-    } catch (error: any) {
-      alert('Delete failed: ' + error.message);
-    }
+    } catch (e: any) { alert('Delete failed: ' + e.message); }
   };
 
+  // ── Employee CRUD ──
   const handleEmployeeSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setUploadError('');
-    setSubmitSuccess('');
+    if (submitting) return;
+    if (!employeeForm.name || !employeeForm.email || !employeeForm.role) { showError('Name, email, and role are required.'); return; }
+    if (!employeeForm.image) { showError('Please upload a profile picture or enter a URL.'); return; }
+
     setSubmitting(true);
-
-    if (!employeeForm.name || !employeeForm.email || !employeeForm.role) {
-      setUploadError('Name, email, and role are required.');
-      setSubmitting(false);
-      return;
-    }
-
     try {
-      const newEmp: Omit<Employee, 'id'> = {
-        name: employeeForm.name,
-        email: employeeForm.email,
-        phone: employeeForm.phone,
-        role: employeeForm.role,
+      const payload: Omit<Employee, 'id' | 'created_at'> = {
+        name: employeeForm.name, email: employeeForm.email, phone: employeeForm.phone,
+        role: employeeForm.role, image: employeeForm.image,
         social: {
-          linkedin: employeeForm.linkedin,
-          twitter: employeeForm.twitter,
-          instagram: employeeForm.instagram,
-          tiktok: employeeForm.tiktok,
-          facebook: employeeForm.facebook,
-          github: employeeForm.github,
+          linkedin: employeeForm.linkedin, twitter: employeeForm.twitter,
+          instagram: employeeForm.instagram, tiktok: employeeForm.tiktok,
+          facebook: employeeForm.facebook, github: employeeForm.github,
         },
-        image: employeeForm.image || `https://randomuser.me/api/portraits/${Math.random() > 0.5 ? 'men' : 'women'}/${Math.floor(Math.random() * 50)}.jpg`,
       };
-      const docRef = await addDoc(collection(db, 'employees'), newEmp);
-      setEmployees([...employees, { id: docRef.id, ...newEmp }]);
-      setSubmitSuccess('Employee added successfully!');
-      setEmployeeForm({
-        name: '',
-        email: '',
-        phone: '',
-        role: '',
-        linkedin: '',
-        twitter: '',
-        instagram: '',
-        tiktok: '',
-        facebook: '',
-        github: '',
-        image: '',
-      });
-    } catch (error: any) {
-      console.error('Employee add error:', error);
-      setUploadError('Failed to add employee: ' + (error.message || 'Unknown error'));
+      await onAddEmployee(payload);
+      showSuccess('Employee added!');
+      setEmployeeForm({ name: '', email: '', phone: '', role: '', linkedin: '', twitter: '', instagram: '', tiktok: '', facebook: '', github: '', image: '' });
+    } catch (e: any) {
+      showError('Failed to add employee: ' + (e.message ?? 'Unknown error'));
     } finally {
       setSubmitting(false);
     }
@@ -261,26 +305,18 @@ const AdminPanel: React.FC<Props> = ({
 
   const handleUpdateEmployee = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!editingEmployee) return;
-    setUploadError('');
-    setSubmitSuccess('');
+    if (!editingEmployee || submitting) return;
     setSubmitting(true);
-
     try {
-      await updateDoc(doc(db, 'employees', editingEmployee.id), {
-        name: editingEmployee.name,
-        email: editingEmployee.email,
-        phone: editingEmployee.phone,
-        role: editingEmployee.role,
-        social: editingEmployee.social,
-        image: editingEmployee.image,
+      await onUpdateEmployee(editingEmployee.id, {
+        name: editingEmployee.name, email: editingEmployee.email,
+        phone: editingEmployee.phone, role: editingEmployee.role,
+        social: editingEmployee.social, image: editingEmployee.image,
       });
-      setEmployees(employees.map(emp => emp.id === editingEmployee.id ? editingEmployee : emp));
-      setSubmitSuccess('Employee updated successfully!');
+      showSuccess('Employee updated!');
       setEditingEmployee(null);
-    } catch (error: any) {
-      console.error('Employee update error:', error);
-      setUploadError('Failed to update employee: ' + (error.message || 'Unknown error'));
+    } catch (e: any) {
+      showError('Failed to update: ' + (e.message ?? 'Unknown error'));
     } finally {
       setSubmitting(false);
     }
@@ -288,24 +324,46 @@ const AdminPanel: React.FC<Props> = ({
 
   const handleDeleteEmployee = async (id: string) => {
     if (!confirm('Delete this employee?')) return;
+    try { await onDeleteEmployee(id); }
+    catch (e: any) { alert('Delete failed: ' + e.message); }
+  };
+
+  // ── Profile ──
+  const handleProfileUpdate = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (submitting) return;
+    setSubmitting(true);
     try {
-      await deleteDoc(doc(db, 'employees', id));
-      setEmployees(employees.filter(e => e.id !== id));
-    } catch (error: any) {
-      alert('Delete failed: ' + error.message);
+      const { error: dbErr } = await supabase.from('users').update({
+        name: profileForm.name, phone: profileForm.phone, avatar: profileForm.avatar, role: profileForm.role,
+      }).eq('id', user?.id);
+      if (dbErr) throw dbErr;
+      await supabase.auth.updateUser({ data: { name: profileForm.name, avatar: profileForm.avatar } });
+      showSuccess('Profile updated!');
+    } catch (e: any) {
+      showError('Failed to update profile: ' + (e.message ?? 'Unknown error'));
+    } finally {
+      setSubmitting(false);
     }
   };
 
   if (userRole !== 'admin') return null;
 
+  // ── Shared field styles ──
+  const inputCls = 'w-full bg-slate-800 border border-slate-700 rounded-2xl px-5 py-4 text-sm text-white focus:outline-none focus:ring-2 focus:ring-cyan-500 font-bold transition-all placeholder-slate-600';
+  const labelCls = 'text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2';
+  const tabCls = (t: string) => `px-6 py-3 text-xs font-black uppercase tracking-widest transition-colors whitespace-nowrap ${activeTab === t ? 'text-cyan-400 border-b-2 border-cyan-400' : 'text-slate-500 hover:text-white'}`;
+
   return (
     <div className="bg-slate-900 rounded-[3rem] p-4 md:p-10 border border-slate-800 shadow-2xl overflow-hidden relative group">
+      {/* Decorative bg icon */}
       <div className="absolute top-0 right-0 p-10 opacity-5 pointer-events-none group-hover:rotate-12 transition-transform duration-1000">
         <Package size={120} stroke="white" strokeWidth={1} />
       </div>
 
+      {/* Header */}
       <div className="flex items-center gap-6 mb-10 relative z-10">
-        <div className="w-16 h-16 bg-cyan-500 rounded-2xl flex items-center justify-center text-slate-950 font-black text-2xl shadow-lg">
+        <div className="w-16 h-16 bg-cyan-500 rounded-2xl flex items-center justify-center text-slate-950 shadow-lg">
           <Cpu size={28} />
         </div>
         <div>
@@ -314,218 +372,143 @@ const AdminPanel: React.FC<Props> = ({
         </div>
       </div>
 
-      {submitSuccess && (
-        <div className="mb-6 bg-emerald-500/20 border border-emerald-500 text-emerald-300 px-4 py-3 rounded-xl text-xs font-bold">
-          {submitSuccess}
+      {/* Alerts */}
+      {globalSuccess && (
+        <div className="mb-6 flex items-center gap-2 bg-emerald-500/20 border border-emerald-500 text-emerald-300 px-4 py-3 rounded-xl text-xs font-bold">
+          <CheckCircle size={14} /> {globalSuccess}
         </div>
       )}
-      {uploadError && (
-        <div className="mb-6 bg-red-500/20 border border-red-500 text-red-300 px-4 py-3 rounded-xl text-xs font-bold">
-          {uploadError}
+      {globalError && (
+        <div className="mb-6 flex items-center gap-2 bg-red-500/20 border border-red-500 text-red-300 px-4 py-3 rounded-xl text-xs font-bold">
+          <AlertCircle size={14} /> {globalError}
         </div>
       )}
 
+      {/* Tabs */}
       <div className="flex gap-2 mb-8 border-b border-slate-800 overflow-x-auto">
-        <button
-          onClick={() => setActiveTab('products')}
-          className={`px-6 py-3 text-xs font-black uppercase tracking-widest transition-colors whitespace-nowrap ${activeTab === 'products' ? 'text-cyan-400 border-b-2 border-cyan-400' : 'text-slate-500 hover:text-white'}`}
-        >
-          Products
-        </button>
-        <button
-          onClick={() => setActiveTab('employees')}
-          className={`px-6 py-3 text-xs font-black uppercase tracking-widest transition-colors whitespace-nowrap ${activeTab === 'employees' ? 'text-cyan-400 border-b-2 border-cyan-400' : 'text-slate-500 hover:text-white'}`}
-        >
-          Employees
-        </button>
+        <button onClick={() => setActiveTab('products')} className={tabCls('products')}>Products</button>
+        <button onClick={() => setActiveTab('employees')} className={tabCls('employees')}>Employees</button>
+        <button onClick={() => setActiveTab('profile')} className={tabCls('profile')}>Profile</button>
       </div>
 
+      {/* ───── PRODUCTS TAB ───── */}
       {activeTab === 'products' && (
         <>
+          {/* Stats */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8 relative z-10">
-            <div className="bg-slate-800 p-4 rounded-2xl border border-slate-700">
-              <p className="text-slate-400 text-[10px] uppercase font-black flex items-center gap-1">
-                <BarChart size={12} /> Total Products
-              </p>
-              <p className="text-white text-2xl font-black">{totalProducts}</p>
-            </div>
-            <div className="bg-slate-800 p-4 rounded-2xl border border-slate-700">
-              <p className="text-slate-400 text-[10px] uppercase font-black">Low Stock (&lt;5)</p>
-              <p className="text-white text-2xl font-black">{lowStockCount}</p>
-            </div>
-            <div className="bg-slate-800 p-4 rounded-2xl border border-slate-700">
-              <p className="text-slate-400 text-[10px] uppercase font-black">New This Month</p>
-              <p className="text-white text-2xl font-black">{newProductsCount}</p>
-            </div>
+            {[
+              { label: 'Total Products', value: totalProducts, icon: BarChart },
+              { label: 'Low Stock (<5)', value: lowStockCount, icon: Package },
+              { label: 'New This Month', value: newProductsCount, icon: Plus },
+            ].map(({ label, value, icon: Icon }) => (
+              <div key={label} className="bg-slate-800 p-4 rounded-2xl border border-slate-700">
+                <p className="text-slate-400 text-[10px] uppercase font-black flex items-center gap-1"><Icon size={12} />{label}</p>
+                <p className="text-white text-2xl font-black">{value}</p>
+              </div>
+            ))}
           </div>
 
-          {/* Product List */}
+          {/* Product list */}
           <div className="mb-8 space-y-3">
             <h3 className="text-white font-black text-sm uppercase tracking-widest">Existing Products</h3>
+            {products.length === 0 && <p className="text-slate-500 text-sm">No products yet.</p>}
             {products.map(product => (
-              <div key={product.id} className="bg-slate-800 p-4 rounded-2xl flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <img src={product.image} alt={product.name} className="w-10 h-10 rounded-lg object-cover" />
-                  <div>
-                    <p className="text-white font-black text-sm">{product.name}</p>
-                    <p className="text-slate-400 text-xs">{product.price.toLocaleString()} Rwf • Stock: {product.stock}</p>
+              <div key={product.id} className="bg-slate-800 p-4 rounded-2xl flex items-center justify-between gap-3">
+                <div className="flex items-center gap-3 min-w-0">
+                  <img src={product.image} alt={product.name} className="w-10 h-10 rounded-lg object-cover flex-shrink-0" />
+                  <div className="min-w-0">
+                    <p className="text-white font-black text-sm truncate">{product.name}</p>
+                    <p className="text-slate-400 text-xs">{product.price.toLocaleString()} Rwf · Stock: {product.stock}</p>
                   </div>
                 </div>
-                <div className="flex gap-2">
-                  <button onClick={() => setEditingProduct(product)} className="text-cyan-400 hover:text-cyan-300">
-                    <Edit size={18} />
-                  </button>
-                  <button onClick={() => handleDeleteProduct(product.id)} className="text-red-400 hover:text-red-300">
-                    <Trash2 size={18} />
-                  </button>
+                <div className="flex gap-2 flex-shrink-0">
+                  <button onClick={() => setEditingProduct(product)} className="text-cyan-400 hover:text-cyan-300 p-1.5 hover:bg-cyan-500/10 rounded-lg transition"><Edit size={16} /></button>
+                  <button onClick={() => handleDeleteProduct(product.id)} className="text-red-400 hover:text-red-300 p-1.5 hover:bg-red-500/10 rounded-lg transition"><Trash2 size={16} /></button>
                 </div>
               </div>
             ))}
           </div>
 
+          {/* Add product form */}
           <form onSubmit={handleProductSubmit} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 relative z-10">
-            {/* ... product form fields (same as before) ... */}
-            <div className="space-y-3 md:col-span-1">
-              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
-                <Tag size={12} /> Model Designation *
-              </label>
-              <input
-                type="text"
-                value={productForm.name}
-                onChange={e => setProductForm({...productForm, name: e.target.value})}
-                className="w-full bg-slate-800 border border-slate-700 rounded-2xl px-5 py-4 text-sm text-white focus:outline-none focus:ring-2 focus:ring-cyan-500 font-bold transition-all"
-                placeholder="e.g. iPhone 15 Pro Max"
-                required
-              />
+            <div className="space-y-3">
+              <label className={labelCls}><Tag size={12} />Model Designation *</label>
+              <input type="text" value={productForm.name} onChange={e => setProductForm({ ...productForm, name: e.target.value })} className={inputCls} placeholder="e.g. iPhone 15 Pro Max" required />
             </div>
             <div className="space-y-3">
-              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
-                <DollarSign size={12} /> Price (Rwf) *
-              </label>
-              <input
-                type="number"
-                value={productForm.price}
-                onChange={e => setProductForm({...productForm, price: e.target.value})}
-                className="w-full bg-slate-800 border border-slate-700 rounded-2xl px-5 py-4 text-sm text-white focus:outline-none focus:ring-2 focus:ring-cyan-500 font-bold transition-all"
-                placeholder="0"
-                required
-              />
+              <label className={labelCls}><DollarSign size={12} />Price (Rwf) *</label>
+              <input type="number" value={productForm.price} onChange={e => setProductForm({ ...productForm, price: e.target.value })} className={inputCls} placeholder="0" required />
             </div>
             <div className="space-y-3">
-              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
-                <DollarSign size={12} /> Discount (Original Price)
-              </label>
-              <input
-                type="number"
-                value={productForm.originalPrice}
-                onChange={e => setProductForm({...productForm, originalPrice: e.target.value})}
-                className="w-full bg-slate-800 border border-slate-700 rounded-2xl px-5 py-4 text-sm text-white focus:outline-none focus:ring-2 focus:ring-cyan-500 font-bold transition-all"
-                placeholder="Optional"
-              />
+              <label className={labelCls}><DollarSign size={12} />Original Price (discount)</label>
+              <input type="number" value={productForm.originalPrice} onChange={e => setProductForm({ ...productForm, originalPrice: e.target.value })} className={inputCls} placeholder="Optional" />
             </div>
             <div className="space-y-3">
-              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
-                <Layers size={12} /> Category
-              </label>
-              <select
-                value={productForm.category}
-                onChange={e => setProductForm({...productForm, category: e.target.value})}
-                className="w-full bg-slate-800 border border-slate-700 rounded-2xl px-5 py-4 text-sm text-white focus:outline-none font-bold appearance-none cursor-pointer"
-              >
-                <option>Smartphone</option>
-                <option>Audio</option>
-                <option>Watches</option>
-                <option>Computer & Laptop</option>
-                <option>Games & Consoles</option>
+              <label className={labelCls}><Layers size={12} />Category</label>
+              <select value={productForm.category} onChange={e => setProductForm({ ...productForm, category: e.target.value })} className={inputCls + ' appearance-none cursor-pointer'}>
+                {['Smartphone', 'Audio', 'Watches', 'Computer & Laptop', 'Games & Consoles', 'Camera', 'Accessories'].map(c => <option key={c}>{c}</option>)}
               </select>
             </div>
+            <div className="space-y-3">
+              <label className={labelCls}><Package size={12} />Stock Quantity</label>
+              <input type="number" value={productForm.stock} onChange={e => setProductForm({ ...productForm, stock: e.target.value })} className={inputCls} />
+            </div>
+            <div className="space-y-3">
+              <label className={labelCls}>Badge</label>
+              <select value={productForm.badge} onChange={e => setProductForm({ ...productForm, badge: e.target.value })} className={inputCls + ' appearance-none cursor-pointer'}>
+                <option value="">No Badge</option>
+                {badgeOptions.map(b => <option key={b}>{b}</option>)}
+              </select>
+            </div>
+
+            {/* Image — URL + uploader */}
             <div className="space-y-3 md:col-span-2 lg:col-span-3">
-              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
-                <ImageIcon size={12} /> Product Image
-              </label>
+              <label className={labelCls}><ImageIcon size={12} />Product Image *</label>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <input
-                  type="url"
-                  value={productForm.image}
-                  onChange={e => setProductForm({...productForm, image: e.target.value})}
-                  className="w-full bg-slate-800 border border-slate-700 rounded-2xl px-5 py-4 text-sm text-white focus:outline-none focus:ring-2 focus:ring-cyan-500 font-bold transition-all"
-                  placeholder="https://..."
-                />
                 <div>
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={async (e) => {
-                      if (e.target.files?.[0]) {
-                        await handleImageUpload(e.target.files[0], 'product');
-                      }
-                    }}
-                    disabled={uploading}
-                    className="text-white text-xs bg-slate-800 p-3 rounded-xl w-full file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-black file:bg-cyan-500 file:text-slate-950 hover:file:bg-cyan-400 disabled:opacity-50"
+                  <p className="text-[10px] text-slate-500 mb-1.5 font-bold uppercase tracking-wider">Upload file</p>
+                  <ImageUploader
+                    value={productForm.image}
+                    onChange={(url) => setProductForm(p => ({ ...p, image: url }))}
+                    folder="products"
+                    disabled={submitting}
                   />
+                </div>
+                <div>
+                  <p className="text-[10px] text-slate-500 mb-1.5 font-bold uppercase tracking-wider">Or paste URL</p>
+                  <input
+                    type="url"
+                    value={productForm.image}
+                    onChange={e => setProductForm({ ...productForm, image: e.target.value })}
+                    className={inputCls}
+                    placeholder="https://..."
+                  />
+                  {productForm.image && (
+                    <img src={productForm.image} alt="preview" className="w-full h-20 object-cover rounded-xl mt-2 border border-slate-700" onError={e => (e.currentTarget.style.display = 'none')} />
+                  )}
                 </div>
               </div>
             </div>
-            <div className="space-y-3">
-              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
-                <Package size={12} /> Stock Quantity
-              </label>
-              <input
-                type="number"
-                value={productForm.stock}
-                onChange={e => setProductForm({...productForm, stock: e.target.value})}
-                className="w-full bg-slate-800 border border-slate-700 rounded-2xl px-5 py-4 text-sm text-white focus:outline-none focus:ring-2 focus:ring-cyan-500 font-bold transition-all"
-              />
+
+            <div className="space-y-3 md:col-span-2 lg:col-span-3">
+              <label className={labelCls}><Cpu size={12} />Specs (key:value, comma separated)</label>
+              <input type="text" value={productForm.specs} onChange={e => setProductForm({ ...productForm, specs: e.target.value })} className={inputCls} placeholder="Processor:A17 Pro, RAM:8GB, Storage:256GB" />
             </div>
-            <div className="space-y-3 md:col-span-2">
-              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
-                <Cpu size={12} /> Specs (key:value, comma separated)
-              </label>
-              <input
-                type="text"
-                value={productForm.specs}
-                onChange={e => setProductForm({...productForm, specs: e.target.value})}
-                className="w-full bg-slate-800 border border-slate-700 rounded-2xl px-5 py-4 text-sm text-white focus:outline-none focus:ring-2 focus:ring-cyan-500 font-bold transition-all"
-                placeholder="Processor:M3 Max, RAM:36GB, Storage:1TB"
-              />
-            </div>
-            <div className="space-y-3 flex flex-wrap items-center gap-4 md:col-span-2 lg:col-span-3">
+
+            <div className="col-span-full flex items-center gap-6">
               <label className="flex items-center gap-2 cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={productForm.isNew}
-                  onChange={e => setProductForm({...productForm, isNew: e.target.checked})}
-                  className="w-5 h-5 rounded bg-slate-800 border-slate-700 text-cyan-500 focus:ring-cyan-500"
-                />
-                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Stable (New)</span>
+                <input type="checkbox" checked={productForm.isNew} onChange={e => setProductForm({ ...productForm, isNew: e.target.checked })} className="w-5 h-5 rounded bg-slate-800 border-slate-700 text-cyan-500" />
+                <span className={labelCls}>Mark as New</span>
               </label>
-              <select
-                value={productForm.badge}
-                onChange={e => setProductForm({...productForm, badge: e.target.value})}
-                className="bg-slate-800 border border-slate-700 rounded-2xl px-5 py-4 text-sm text-white focus:outline-none font-bold"
-              >
-                <option value="">No Badge</option>
-                {badgeOptions.map(opt => (
-                  <option key={opt} value={opt}>{opt}</option>
-                ))}
-              </select>
             </div>
+
             <div className="col-span-full flex justify-end">
               <button
                 type="submit"
-                disabled={submitting || uploading}
-                className="bg-cyan-500 hover:bg-cyan-400 text-slate-950 px-12 py-4 rounded-2xl font-black text-xs tracking-[0.2em] transition-all shadow-xl active:scale-95 flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                disabled={submitting}
+                className="bg-cyan-500 hover:bg-cyan-400 disabled:opacity-50 disabled:cursor-not-allowed text-slate-950 px-12 py-4 rounded-2xl font-black text-xs tracking-[0.2em] transition-all shadow-xl active:scale-95 flex items-center gap-2"
               >
-                {submitting ? (
-                  <>
-                    <div className="w-4 h-4 border-2 border-slate-950 border-t-transparent rounded-full animate-spin" />
-                    INJECTING...
-                  </>
-                ) : (
-                  <>
-                    <Plus size={16} /> INJECT UNIT
-                  </>
-                )}
+                {submitting ? <><Loader2 className="w-4 h-4 animate-spin" />INJECTING…</> : <><Plus size={16} />INJECT UNIT</>}
               </button>
             </div>
           </form>
@@ -533,113 +516,80 @@ const AdminPanel: React.FC<Props> = ({
           {/* Edit Product Modal */}
           {editingProduct && (
             <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm">
-              <div className="bg-white rounded-3xl p-8 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+              <div className="bg-white rounded-3xl p-8 max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl">
                 <div className="flex justify-between items-center mb-6">
                   <h3 className="text-2xl font-black text-slate-900">Edit Product</h3>
-                  <button onClick={() => setEditingProduct(null)} className="p-2 hover:bg-slate-100 rounded-full">
-                    <X size={20} />
-                  </button>
+                  <button onClick={() => setEditingProduct(null)} className="p-2 hover:bg-slate-100 rounded-full"><X size={20} /></button>
                 </div>
                 <form onSubmit={handleUpdateProduct} className="space-y-4">
-                  <input
-                    type="text"
-                    value={editingProduct.name}
-                    onChange={e => setEditingProduct({ ...editingProduct, name: e.target.value })}
-                    className="w-full border border-slate-200 rounded-xl px-4 py-3"
-                    placeholder="Product Name"
-                    required
-                  />
-                  <input
-                    type="number"
-                    value={editingProduct.price}
-                    onChange={e => setEditingProduct({ ...editingProduct, price: Number(e.target.value) })}
-                    className="w-full border border-slate-200 rounded-xl px-4 py-3"
-                    placeholder="Price"
-                    required
-                  />
-                  <input
-                    type="number"
-                    value={editingProduct.originalPrice || ''}
-                    onChange={e => setEditingProduct({ ...editingProduct, originalPrice: e.target.value ? Number(e.target.value) : undefined })}
-                    className="w-full border border-slate-200 rounded-xl px-4 py-3"
-                    placeholder="Original Price (optional)"
-                  />
-                  <select
-                    value={editingProduct.category}
-                    onChange={e => setEditingProduct({ ...editingProduct, category: e.target.value })}
-                    className="w-full border border-slate-200 rounded-xl px-4 py-3"
-                  >
-                    <option>Smartphone</option>
-                    <option>Audio</option>
-                    <option>Watches</option>
-                    <option>Computer & Laptop</option>
-                    <option>Games & Consoles</option>
+                  {[
+                    { label: 'Product Name', key: 'name', type: 'text', required: true },
+                    { label: 'Price (Rwf)', key: 'price', type: 'number', required: true },
+                    { label: 'Original Price', key: 'originalPrice', type: 'number' },
+                    { label: 'Stock', key: 'stock', type: 'number' },
+                  ].map(({ label, key, type, required }) => (
+                    <input
+                      key={key}
+                      type={type}
+                      value={(editingProduct as any)[key] ?? ''}
+                      onChange={e => setEditingProduct({ ...editingProduct, [key]: type === 'number' ? (e.target.value ? Number(e.target.value) : undefined) : e.target.value })}
+                      className="w-full border border-slate-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-cyan-400"
+                      placeholder={label}
+                      required={required}
+                    />
+                  ))}
+                  <select value={editingProduct.category} onChange={e => setEditingProduct({ ...editingProduct, category: e.target.value })} className="w-full border border-slate-200 rounded-xl px-4 py-3 text-sm">
+                    {['Smartphone', 'Audio', 'Watches', 'Computer & Laptop', 'Games & Consoles', 'Camera', 'Accessories'].map(c => <option key={c}>{c}</option>)}
                   </select>
-                  <div className="flex gap-2">
-                    <input
-                      type="url"
-                      value={editingProduct.image}
-                      onChange={e => setEditingProduct({ ...editingProduct, image: e.target.value })}
-                      className="flex-1 border border-slate-200 rounded-xl px-4 py-3"
-                      placeholder="Image URL"
-                    />
-                    <input
-                      type="file"
-                      accept="image/*"
-                      onChange={async (e) => {
-                        if (e.target.files?.[0]) {
-                          await handleImageUpload(e.target.files[0], 'editProduct');
-                        }
-                      }}
-                      className="text-sm"
-                    />
+
+                  {/* Image uploader in edit modal */}
+                  <div>
+                    <p className="text-xs font-bold text-slate-600 mb-2">Product Image</p>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <p className="text-[10px] text-slate-400 mb-1">Upload</p>
+                        <ImageUploader
+                          value={editingProduct.image}
+                          onChange={(url) => setEditingProduct(p => p ? { ...p, image: url } : p)}
+                          folder="products"
+                          disabled={submitting}
+                        />
+                      </div>
+                      <div>
+                        <p className="text-[10px] text-slate-400 mb-1">Or paste URL</p>
+                        <input
+                          type="url"
+                          value={editingProduct.image}
+                          onChange={e => setEditingProduct({ ...editingProduct, image: e.target.value })}
+                          className="w-full border border-slate-200 rounded-xl px-3 py-2.5 text-sm"
+                          placeholder="https://..."
+                        />
+                      </div>
+                    </div>
                   </div>
-                  <input
-                    type="number"
-                    value={editingProduct.stock}
-                    onChange={e => setEditingProduct({ ...editingProduct, stock: Number(e.target.value) })}
-                    className="w-full border border-slate-200 rounded-xl px-4 py-3"
-                    placeholder="Stock"
-                  />
+
                   <textarea
                     value={stringifySpecs(editingProduct.specs || {})}
                     onChange={e => setEditingProduct({ ...editingProduct, specs: parseSpecs(e.target.value) })}
-                    className="w-full border border-slate-200 rounded-xl px-4 py-3"
+                    className="w-full border border-slate-200 rounded-xl px-4 py-3 text-sm resize-none"
                     placeholder="Specs (key:value, comma separated)"
-                    rows={3}
+                    rows={2}
                   />
                   <div className="flex items-center gap-4">
-                    <label className="flex items-center gap-2">
-                      <input
-                        type="checkbox"
-                        checked={editingProduct.isNew || false}
-                        onChange={e => setEditingProduct({ ...editingProduct, isNew: e.target.checked })}
-                      />
-                      <span>New</span>
+                    <label className="flex items-center gap-2 text-sm">
+                      <input type="checkbox" checked={editingProduct.isNew || false} onChange={e => setEditingProduct({ ...editingProduct, isNew: e.target.checked })} />
+                      New
                     </label>
-                    <select
-                      value={editingProduct.badge || ''}
-                      onChange={e => setEditingProduct({ ...editingProduct, badge: e.target.value || undefined })}
-                      className="border border-slate-200 rounded-xl px-4 py-2"
-                    >
+                    <select value={editingProduct.badge || ''} onChange={e => setEditingProduct({ ...editingProduct, badge: e.target.value || undefined })} className="border border-slate-200 rounded-xl px-4 py-2 text-sm">
                       <option value="">No Badge</option>
-                      {badgeOptions.map(opt => <option key={opt}>{opt}</option>)}
+                      {badgeOptions.map(b => <option key={b}>{b}</option>)}
                     </select>
                   </div>
-                  <div className="flex justify-end gap-4 pt-4">
-                    <button
-                      type="button"
-                      onClick={() => setEditingProduct(null)}
-                      className="px-6 py-3 border border-slate-200 rounded-xl font-bold"
-                    >
-                      Cancel
-                    </button>
-                    <button
-                      type="submit"
-                      disabled={submitting}
-                      className="bg-cyan-500 text-white px-6 py-3 rounded-xl font-bold flex items-center gap-2"
-                    >
-                      {submitting ? 'Saving...' : <><Save size={16} /> Save Changes</>}
+                  <div className="flex justify-end gap-3 pt-2">
+                    <button type="button" onClick={() => setEditingProduct(null)} className="px-6 py-3 border border-slate-200 rounded-xl font-bold text-sm hover:bg-slate-50 transition">Cancel</button>
+                    <button type="submit" disabled={submitting} className="bg-cyan-500 text-white px-6 py-3 rounded-xl font-bold text-sm flex items-center gap-2 hover:bg-cyan-400 disabled:opacity-50 transition">
+                      {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save size={15} />}
+                      Save
                     </button>
                   </div>
                 </form>
@@ -649,152 +599,79 @@ const AdminPanel: React.FC<Props> = ({
         </>
       )}
 
+      {/* ───── EMPLOYEES TAB ───── */}
       {activeTab === 'employees' && (
         <div className="relative z-10">
-          <h3 className="text-white font-black text-sm uppercase tracking-widest mb-6 flex items-center gap-2">
-            <Users size={16} /> Manage Employees
-          </h3>
+          <h3 className="text-white font-black text-sm uppercase tracking-widest mb-6 flex items-center gap-2"><Users size={16} />Manage Employees</h3>
 
-          {/* Employee List */}
+          {/* List */}
           <div className="mb-8 space-y-3">
-            {employees.map(emp => (
-              <div key={emp.id} className="bg-slate-800 p-4 rounded-2xl flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  {emp.image && (
-                    <img src={emp.image} alt={emp.name} className="w-10 h-10 rounded-full object-cover border-2 border-cyan-500" />
-                  )}
-                  <div>
-                    <p className="text-white font-black">{emp.name}</p>
-                    <p className="text-slate-400 text-xs">{emp.email} • {emp.role}</p>
+            {employeesLoading ? (
+              <div className="flex items-center gap-2 text-slate-400 text-sm"><Loader2 size={14} className="animate-spin" />Loading employees…</div>
+            ) : employees.length === 0 ? (
+              <p className="text-slate-500 text-sm">No employees yet.</p>
+            ) : (
+              employees.map(emp => (
+                <div key={emp.id} className="bg-slate-800 p-4 rounded-2xl flex items-center justify-between gap-3">
+                  <div className="flex items-center gap-3 min-w-0">
+                    {emp.image
+                      ? <img src={emp.image} alt={emp.name} className="w-10 h-10 rounded-full object-cover border-2 border-cyan-500 flex-shrink-0" />
+                      : <div className="w-10 h-10 rounded-full bg-slate-700 flex items-center justify-center text-white font-black flex-shrink-0">{emp.name[0]}</div>
+                    }
+                    <div className="min-w-0">
+                      <p className="text-white font-black truncate">{emp.name}</p>
+                      <p className="text-slate-400 text-xs truncate">{emp.email} · {emp.role}</p>
+                    </div>
+                  </div>
+                  <div className="flex gap-2 flex-shrink-0">
+                    <button onClick={() => setEditingEmployee(emp)} className="text-cyan-400 hover:text-cyan-300 p-1.5 hover:bg-cyan-500/10 rounded-lg transition"><Edit size={16} /></button>
+                    <button onClick={() => handleDeleteEmployee(emp.id)} className="text-red-400 hover:text-red-300 p-1.5 hover:bg-red-500/10 rounded-lg transition"><Trash2 size={16} /></button>
                   </div>
                 </div>
-                <div className="flex gap-2">
-                  <button onClick={() => setEditingEmployee(emp)} className="text-cyan-400 hover:text-cyan-300">
-                    <Edit size={18} />
-                  </button>
-                  <button onClick={() => handleDeleteEmployee(emp.id)} className="text-red-400 hover:text-red-300">
-                    <Trash2 size={18} />
-                  </button>
-                </div>
-              </div>
-            ))}
+              ))
+            )}
           </div>
 
-          <form onSubmit={handleEmployeeSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-10">
-            <input
-              type="text"
-              placeholder="Full Name *"
-              value={employeeForm.name}
-              onChange={e => setEmployeeForm({...employeeForm, name: e.target.value})}
-              className="bg-slate-800 border border-slate-700 rounded-2xl px-5 py-4 text-sm text-white"
-              required
-            />
-            <input
-              type="email"
-              placeholder="Email *"
-              value={employeeForm.email}
-              onChange={e => setEmployeeForm({...employeeForm, email: e.target.value})}
-              className="bg-slate-800 border border-slate-700 rounded-2xl px-5 py-4 text-sm text-white"
-              required
-            />
-            <input
-              type="tel"
-              placeholder="Phone"
-              value={employeeForm.phone}
-              onChange={e => setEmployeeForm({...employeeForm, phone: e.target.value})}
-              className="bg-slate-800 border border-slate-700 rounded-2xl px-5 py-4 text-sm text-white"
-            />
-            <input
-              type="text"
-              placeholder="Role *"
-              value={employeeForm.role}
-              onChange={e => setEmployeeForm({...employeeForm, role: e.target.value})}
-              className="bg-slate-800 border border-slate-700 rounded-2xl px-5 py-4 text-sm text-white"
-              required
-            />
-            <input
-              type="url"
-              placeholder="LinkedIn URL"
-              value={employeeForm.linkedin}
-              onChange={e => setEmployeeForm({...employeeForm, linkedin: e.target.value})}
-              className="bg-slate-800 border border-slate-700 rounded-2xl px-5 py-4 text-sm text-white"
-            />
-            <input
-              type="url"
-              placeholder="Twitter URL"
-              value={employeeForm.twitter}
-              onChange={e => setEmployeeForm({...employeeForm, twitter: e.target.value})}
-              className="bg-slate-800 border border-slate-700 rounded-2xl px-5 py-4 text-sm text-white"
-            />
-            <input
-              type="url"
-              placeholder="Instagram URL"
-              value={employeeForm.instagram}
-              onChange={e => setEmployeeForm({...employeeForm, instagram: e.target.value})}
-              className="bg-slate-800 border border-slate-700 rounded-2xl px-5 py-4 text-sm text-white"
-            />
-            <input
-              type="url"
-              placeholder="TikTok URL"
-              value={employeeForm.tiktok}
-              onChange={e => setEmployeeForm({...employeeForm, tiktok: e.target.value})}
-              className="bg-slate-800 border border-slate-700 rounded-2xl px-5 py-4 text-sm text-white"
-            />
-            <input
-              type="url"
-              placeholder="Facebook URL"
-              value={employeeForm.facebook}
-              onChange={e => setEmployeeForm({...employeeForm, facebook: e.target.value})}
-              className="bg-slate-800 border border-slate-700 rounded-2xl px-5 py-4 text-sm text-white"
-            />
-            <input
-              type="url"
-              placeholder="GitHub URL"
-              value={employeeForm.github}
-              onChange={e => setEmployeeForm({...employeeForm, github: e.target.value})}
-              className="bg-slate-800 border border-slate-700 rounded-2xl px-5 py-4 text-sm text-white"
-            />
-            <div className="col-span-1 md:col-span-2 flex flex-col gap-2">
-              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Profile Picture</label>
+          {/* Add employee form */}
+          <form onSubmit={handleEmployeeSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-5">
+            {[
+              { ph: 'Full Name *', key: 'name', type: 'text', required: true },
+              { ph: 'Email *', key: 'email', type: 'email', required: true },
+              { ph: 'Phone', key: 'phone', type: 'tel' },
+              { ph: 'Role *', key: 'role', type: 'text', required: true },
+              { ph: 'LinkedIn URL', key: 'linkedin', type: 'url' },
+              { ph: 'Twitter URL', key: 'twitter', type: 'url' },
+              { ph: 'Instagram URL', key: 'instagram', type: 'url' },
+              { ph: 'TikTok URL', key: 'tiktok', type: 'url' },
+              { ph: 'Facebook URL', key: 'facebook', type: 'url' },
+              { ph: 'GitHub URL', key: 'github', type: 'url' },
+            ].map(({ ph, key, type, required }) => (
+              <input key={key} type={type} placeholder={ph} value={(employeeForm as any)[key]} onChange={e => setEmployeeForm({ ...employeeForm, [key]: e.target.value })} className={inputCls} required={required} disabled={submitting} />
+            ))}
+
+            {/* Profile picture */}
+            <div className="col-span-full space-y-2">
+              <label className={labelCls}>Profile Picture *</label>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <input
-                  type="url"
-                  placeholder="Image URL (optional)"
-                  value={employeeForm.image}
-                  onChange={e => setEmployeeForm({...employeeForm, image: e.target.value})}
-                  className="bg-slate-800 border border-slate-700 rounded-2xl px-5 py-4 text-sm text-white"
-                />
                 <div>
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={async (e) => {
-                      if (e.target.files?.[0]) {
-                        await handleImageUpload(e.target.files[0], 'employee');
-                      }
-                    }}
-                    disabled={uploading}
-                    className="text-white text-xs bg-slate-800 p-3 rounded-xl w-full file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-black file:bg-cyan-500 file:text-slate-950 hover:file:bg-cyan-400 disabled:opacity-50"
+                  <p className="text-[10px] text-slate-500 mb-1.5 font-bold uppercase tracking-wider">Upload file</p>
+                  <ImageUploader
+                    value={employeeForm.image}
+                    onChange={(url) => setEmployeeForm(f => ({ ...f, image: url }))}
+                    folder="employees"
+                    disabled={submitting}
                   />
+                </div>
+                <div>
+                  <p className="text-[10px] text-slate-500 mb-1.5 font-bold uppercase tracking-wider">Or paste URL</p>
+                  <input type="url" value={employeeForm.image} onChange={e => setEmployeeForm({ ...employeeForm, image: e.target.value })} className={inputCls} placeholder="https://..." disabled={submitting} />
                 </div>
               </div>
             </div>
+
             <div className="col-span-full flex justify-end">
-              <button
-                type="submit"
-                disabled={submitting || uploading}
-                className="bg-cyan-500 text-slate-950 px-8 py-3 rounded-2xl font-black text-xs tracking-widest hover:bg-cyan-400 transition flex items-center gap-2 disabled:opacity-50"
-              >
-                {submitting ? (
-                  <>
-                    <div className="w-4 h-4 border-2 border-slate-950 border-t-transparent rounded-full animate-spin" />
-                    ADDING...
-                  </>
-                ) : (
-                  <>
-                    <UserPlus size={16} /> ADD EMPLOYEE
-                  </>
-                )}
+              <button type="submit" disabled={submitting} className="bg-cyan-500 text-slate-950 px-8 py-3 rounded-2xl font-black text-xs tracking-widest hover:bg-cyan-400 transition flex items-center gap-2 disabled:opacity-50">
+                {submitting ? <><Loader2 className="w-4 h-4 animate-spin" />ADDING…</> : <><UserPlus size={16} />ADD EMPLOYEE</>}
               </button>
             </div>
           </form>
@@ -802,146 +679,82 @@ const AdminPanel: React.FC<Props> = ({
           {/* Edit Employee Modal */}
           {editingEmployee && (
             <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm">
-              <div className="bg-white rounded-3xl p-8 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+              <div className="bg-white rounded-3xl p-8 max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl">
                 <div className="flex justify-between items-center mb-6">
                   <h3 className="text-2xl font-black text-slate-900">Edit Employee</h3>
-                  <button onClick={() => setEditingEmployee(null)} className="p-2 hover:bg-slate-100 rounded-full">
-                    <X size={20} />
-                  </button>
+                  <button onClick={() => setEditingEmployee(null)} className="p-2 hover:bg-slate-100 rounded-full"><X size={20} /></button>
                 </div>
                 <form onSubmit={handleUpdateEmployee} className="space-y-4">
-                  <input
-                    type="text"
-                    value={editingEmployee.name}
-                    onChange={e => setEditingEmployee({ ...editingEmployee, name: e.target.value })}
-                    className="w-full border border-slate-200 rounded-xl px-4 py-3"
-                    placeholder="Full Name"
-                    required
-                  />
-                  <input
-                    type="email"
-                    value={editingEmployee.email}
-                    onChange={e => setEditingEmployee({ ...editingEmployee, email: e.target.value })}
-                    className="w-full border border-slate-200 rounded-xl px-4 py-3"
-                    placeholder="Email"
-                    required
-                  />
-                  <input
-                    type="tel"
-                    value={editingEmployee.phone || ''}
-                    onChange={e => setEditingEmployee({ ...editingEmployee, phone: e.target.value })}
-                    className="w-full border border-slate-200 rounded-xl px-4 py-3"
-                    placeholder="Phone"
-                  />
-                  <input
-                    type="text"
-                    value={editingEmployee.role}
-                    onChange={e => setEditingEmployee({ ...editingEmployee, role: e.target.value })}
-                    className="w-full border border-slate-200 rounded-xl px-4 py-3"
-                    placeholder="Role"
-                    required
-                  />
-                  <div className="grid grid-cols-2 gap-4">
-                    <input
-                      type="url"
-                      value={editingEmployee.social?.linkedin || ''}
-                      onChange={e => setEditingEmployee({
-                        ...editingEmployee,
-                        social: { ...editingEmployee.social, linkedin: e.target.value }
-                      })}
-                      placeholder="LinkedIn"
-                      className="border border-slate-200 rounded-xl px-4 py-3"
-                    />
-                    <input
-                      type="url"
-                      value={editingEmployee.social?.twitter || ''}
-                      onChange={e => setEditingEmployee({
-                        ...editingEmployee,
-                        social: { ...editingEmployee.social, twitter: e.target.value }
-                      })}
-                      placeholder="Twitter"
-                      className="border border-slate-200 rounded-xl px-4 py-3"
-                    />
-                    <input
-                      type="url"
-                      value={editingEmployee.social?.instagram || ''}
-                      onChange={e => setEditingEmployee({
-                        ...editingEmployee,
-                        social: { ...editingEmployee.social, instagram: e.target.value }
-                      })}
-                      placeholder="Instagram"
-                      className="border border-slate-200 rounded-xl px-4 py-3"
-                    />
-                    <input
-                      type="url"
-                      value={editingEmployee.social?.tiktok || ''}
-                      onChange={e => setEditingEmployee({
-                        ...editingEmployee,
-                        social: { ...editingEmployee.social, tiktok: e.target.value }
-                      })}
-                      placeholder="TikTok"
-                      className="border border-slate-200 rounded-xl px-4 py-3"
-                    />
-                    <input
-                      type="url"
-                      value={editingEmployee.social?.facebook || ''}
-                      onChange={e => setEditingEmployee({
-                        ...editingEmployee,
-                        social: { ...editingEmployee.social, facebook: e.target.value }
-                      })}
-                      placeholder="Facebook"
-                      className="border border-slate-200 rounded-xl px-4 py-3"
-                    />
-                    <input
-                      type="url"
-                      value={editingEmployee.social?.github || ''}
-                      onChange={e => setEditingEmployee({
-                        ...editingEmployee,
-                        social: { ...editingEmployee.social, github: e.target.value }
-                      })}
-                      placeholder="GitHub"
-                      className="border border-slate-200 rounded-xl px-4 py-3"
-                    />
+                  {[
+                    { ph: 'Full Name', key: 'name', type: 'text', required: true },
+                    { ph: 'Email', key: 'email', type: 'email', required: true },
+                    { ph: 'Phone', key: 'phone', type: 'tel' },
+                    { ph: 'Role', key: 'role', type: 'text', required: true },
+                  ].map(({ ph, key, type, required }) => (
+                    <input key={key} type={type} value={(editingEmployee as any)[key] ?? ''} onChange={e => setEditingEmployee({ ...editingEmployee, [key]: e.target.value })} className="w-full border border-slate-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-cyan-400" placeholder={ph} required={required} />
+                  ))}
+                  <div className="grid grid-cols-2 gap-3">
+                    {['linkedin', 'twitter', 'instagram', 'tiktok', 'facebook', 'github'].map(key => (
+                      <input key={key} type="url" value={(editingEmployee.social as any)?.[key] ?? ''} onChange={e => setEditingEmployee({ ...editingEmployee, social: { ...editingEmployee.social, [key]: e.target.value } })} placeholder={key.charAt(0).toUpperCase() + key.slice(1)} className="border border-slate-200 rounded-xl px-4 py-3 text-sm" />
+                    ))}
                   </div>
-                  <div className="flex gap-2">
-                    <input
-                      type="url"
-                      value={editingEmployee.image || ''}
-                      onChange={e => setEditingEmployee({ ...editingEmployee, image: e.target.value })}
-                      className="flex-1 border border-slate-200 rounded-xl px-4 py-3"
-                      placeholder="Image URL"
-                    />
-                    <input
-                      type="file"
-                      accept="image/*"
-                      onChange={async (e) => {
-                        if (e.target.files?.[0]) {
-                          await handleImageUpload(e.target.files[0], 'editEmployee');
-                        }
-                      }}
-                      className="text-sm"
-                    />
+
+                  {/* Image */}
+                  <div>
+                    <p className="text-xs font-bold text-slate-600 mb-2">Profile Picture</p>
+                    <div className="grid grid-cols-2 gap-3">
+                      <ImageUploader value={editingEmployee.image ?? ''} onChange={(url) => setEditingEmployee(e => e ? { ...e, image: url } : e)} folder="employees" disabled={submitting} />
+                      <input type="url" value={editingEmployee.image ?? ''} onChange={e => setEditingEmployee({ ...editingEmployee, image: e.target.value })} className="border border-slate-200 rounded-xl px-4 py-3 text-sm self-start" placeholder="Or paste URL" />
+                    </div>
                   </div>
-                  <div className="flex justify-end gap-4 pt-4">
-                    <button
-                      type="button"
-                      onClick={() => setEditingEmployee(null)}
-                      className="px-6 py-3 border border-slate-200 rounded-xl font-bold"
-                    >
-                      Cancel
-                    </button>
-                    <button
-                      type="submit"
-                      disabled={submitting}
-                      className="bg-cyan-500 text-white px-6 py-3 rounded-xl font-bold flex items-center gap-2"
-                    >
-                      {submitting ? 'Saving...' : <><Save size={16} /> Save Changes</>}
+
+                  <div className="flex justify-end gap-3 pt-2">
+                    <button type="button" onClick={() => setEditingEmployee(null)} className="px-6 py-3 border border-slate-200 rounded-xl font-bold text-sm hover:bg-slate-50 transition">Cancel</button>
+                    <button type="submit" disabled={submitting} className="bg-cyan-500 text-white px-6 py-3 rounded-xl font-bold text-sm flex items-center gap-2 hover:bg-cyan-400 disabled:opacity-50 transition">
+                      {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save size={15} />}
+                      Save
                     </button>
                   </div>
                 </form>
               </div>
             </div>
           )}
+        </div>
+      )}
+
+      {/* ───── PROFILE TAB ───── */}
+      {activeTab === 'profile' && (
+        <div className="relative z-10">
+          <h3 className="text-white font-black text-sm uppercase tracking-widest mb-6 flex items-center gap-2"><Users size={16} />Admin Profile</h3>
+          <form onSubmit={handleProfileUpdate} className="max-w-md space-y-6">
+            {/* Avatar */}
+            <div className="flex flex-col items-center gap-4">
+              <div className="w-24 h-24 rounded-full overflow-hidden border-4 border-cyan-500 bg-slate-700 flex-shrink-0">
+                {profileForm.avatar
+                  ? <img src={profileForm.avatar} alt="Profile" className="w-full h-full object-cover" />
+                  : <div className="w-full h-full flex items-center justify-center text-3xl">👤</div>
+                }
+              </div>
+              <div className="w-full">
+                <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-2">Profile Picture</p>
+                <ImageUploader
+                  value={profileForm.avatar}
+                  onChange={(url) => setProfileForm(f => ({ ...f, avatar: url }))}
+                  folder="avatars"
+                  disabled={submitting}
+                />
+              </div>
+            </div>
+
+            <input type="text" value={profileForm.name} onChange={e => setProfileForm({ ...profileForm, name: e.target.value })} className={inputCls} placeholder="Full Name" required disabled={submitting} />
+            <input type="email" value={profileForm.email} disabled className={inputCls + ' opacity-50 cursor-not-allowed'} />
+            <input type="tel" value={profileForm.phone || ''} onChange={e => setProfileForm({ ...profileForm, phone: e.target.value })} className={inputCls} placeholder="Phone" disabled={submitting} />
+            <input type="text" value={profileForm.role} disabled className={inputCls + ' opacity-50 cursor-not-allowed'} />
+
+            <button type="submit" disabled={submitting} className="w-full bg-cyan-500 text-slate-950 py-4 rounded-2xl font-black text-xs tracking-widest hover:bg-cyan-400 transition flex items-center justify-center gap-2 disabled:opacity-50">
+              {submitting ? <><Loader2 className="w-4 h-4 animate-spin" />SAVING…</> : <><Save size={16} />UPDATE PROFILE</>}
+            </button>
+          </form>
         </div>
       )}
     </div>

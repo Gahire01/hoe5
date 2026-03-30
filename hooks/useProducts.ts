@@ -1,62 +1,39 @@
-import { useState, useEffect } from 'react';
-import { db } from '../firebase';
-import { collection, onSnapshot, query, orderBy, addDoc, deleteDoc, doc, updateDoc } from 'firebase/firestore';
+import { useState, useEffect, useCallback } from 'react';
+import { supabase } from '../supabase';
 import { Product } from '../types';
-import { PRODUCTS as INITIAL_PRODUCTS } from '../constants';
 
-export const useProducts = () => {
+export function useProducts() {
   const [products, setProducts] = useState<Product[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading,  setLoading ] = useState(true);
+  const [error,    setError   ] = useState<string | null>(null);
 
-  useEffect(() => {
-    const q = query(collection(db, 'products'), orderBy('createdAt', 'desc'));
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      const prods: Product[] = [];
-      snapshot.forEach((doc) => {
-        prods.push({ id: doc.id, ...doc.data() } as Product);
-      });
-      setProducts(prods.length ? prods : INITIAL_PRODUCTS);
+  const fetchProducts = useCallback(async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const { data, error: dbErr } = await supabase
+        .from('products')
+        .select('*')
+        .order('created_at', { ascending: false });
+      if (dbErr) throw dbErr;
+      setProducts((data as Product[]) ?? []);
+    } catch (e: any) {
+      setError(e?.message ?? 'Failed to load products');
+    } finally {
       setLoading(false);
-    }, (error) => {
-      console.error('Error fetching products:', error);
-      setProducts(INITIAL_PRODUCTS);
-      setLoading(false);
-    });
-
-    return () => unsubscribe();
+    }
   }, []);
 
-  const addProduct = async (product: Omit<Product, 'id'>) => {
-    try {
-      const docRef = await addDoc(collection(db, 'products'), {
-        ...product,
-        createdAt: new Date(),
-      });
-      // Real-time listener will update automatically
-      return docRef.id;
-    } catch (error) {
-      console.error('Error adding product:', error);
-      throw error;
-    }
-  };
+  useEffect(() => { fetchProducts(); }, [fetchProducts]);
 
-  const updateProduct = async (id: string, updates: Partial<Product>) => {
-    try {
-      await updateDoc(doc(db, 'products', id), updates);
-    } catch (error) {
-      console.error('Error updating product:', error);
-      throw error;
-    }
-  };
+  const addProduct    = useCallback((p: Product) =>
+    setProducts(prev => [p, ...prev]), []);
 
-  const deleteProduct = async (id: string) => {
-    try {
-      await deleteDoc(doc(db, 'products', id));
-    } catch (error) {
-      console.error('Error deleting product:', error);
-      throw error;
-    }
-  };
+  const updateProduct = useCallback((id: string, updates: Partial<Product>) =>
+    setProducts(prev => prev.map(p => p.id === id ? { ...p, ...updates } : p)), []);
 
-  return { products, loading, addProduct, updateProduct, deleteProduct };
-};
+  const deleteProduct = useCallback((id: string) =>
+    setProducts(prev => prev.filter(p => p.id !== id)), []);
+
+  return { products, loading, error, fetchProducts, addProduct, updateProduct, deleteProduct };
+}

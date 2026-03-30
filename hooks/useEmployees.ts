@@ -1,61 +1,50 @@
-import { useState, useEffect } from 'react';
-import { db } from '../firebase';
-import { collection, onSnapshot, addDoc, deleteDoc, doc, updateDoc } from 'firebase/firestore';
+import { useState, useEffect, useCallback } from 'react';
+import { supabase } from '../supabase';
 import { Employee } from '../types';
 
-export const useEmployees = () => {
+export function useEmployees() {
   const [employees, setEmployees] = useState<Employee[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading,   setLoading  ] = useState(true);
+  const [error,     setError    ] = useState<string | null>(null);
 
-  useEffect(() => {
-    const unsubscribe = onSnapshot(
-      collection(db, 'employees'),
-      (snapshot) => {
-        const emps: Employee[] = [];
-        snapshot.forEach((doc) => {
-          emps.push({ id: doc.id, ...doc.data() } as Employee);
-        });
-        setEmployees(emps);
-        setLoading(false);
-      },
-      (error) => {
-        console.error('Error fetching employees:', error);
-        setLoading(false);
-      }
-    );
-    return () => unsubscribe();
+  const fetchEmployees = useCallback(async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const { data, error: dbErr } = await supabase
+        .from('employees')
+        .select('*')
+        .order('created_at', { ascending: false });
+      if (dbErr) throw dbErr;
+      setEmployees((data as Employee[]) ?? []);
+    } catch (e: any) {
+      setError(e?.message ?? 'Failed to load employees');
+    } finally {
+      setLoading(false);
+    }
   }, []);
 
-  const addEmployee = async (employee: Omit<Employee, 'id'>) => {
-    try {
-      const docRef = await addDoc(collection(db, 'employees'), {
-        ...employee,
-        createdAt: new Date(),
-      });
-      return docRef.id;
-    } catch (error) {
-      console.error('Error adding employee:', error);
-      throw error;
-    }
-  };
+  useEffect(() => { fetchEmployees(); }, [fetchEmployees]);
 
-  const updateEmployee = async (id: string, updates: Partial<Employee>) => {
-    try {
-      await updateDoc(doc(db, 'employees', id), updates);
-    } catch (error) {
-      console.error('Error updating employee:', error);
-      throw error;
-    }
-  };
+  const addEmployee = useCallback(async (emp: Omit<Employee, 'id' | 'created_at'>) => {
+    const { data, error } = await supabase.from('employees').insert([emp]).select().single();
+    if (error) throw error;
+    setEmployees(prev => [data as Employee, ...prev]);
+    return data as Employee;
+  }, []);
 
-  const deleteEmployee = async (id: string) => {
-    try {
-      await deleteDoc(doc(db, 'employees', id));
-    } catch (error) {
-      console.error('Error deleting employee:', error);
-      throw error;
-    }
-  };
+  const updateEmployee = useCallback(async (id: string, updates: Partial<Employee>) => {
+    const { data, error } = await supabase.from('employees').update(updates).eq('id', id).select().single();
+    if (error) throw error;
+    setEmployees(prev => prev.map(e => e.id === id ? { ...e, ...updates } : e));
+    return data as Employee;
+  }, []);
 
-  return { employees, loading, addEmployee, updateEmployee, deleteEmployee };
-};
+  const deleteEmployee = useCallback(async (id: string) => {
+    const { error } = await supabase.from('employees').delete().eq('id', id);
+    if (error) throw error;
+    setEmployees(prev => prev.filter(e => e.id !== id));
+  }, []);
+
+  return { employees, loading, error, fetchEmployees, addEmployee, updateEmployee, deleteEmployee };
+}
