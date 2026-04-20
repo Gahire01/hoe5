@@ -1,32 +1,31 @@
-import { Product, Category, Supplier, PaymentMethod, FeaturedService, TeamMember } from './types';
-import {
-  FaMobileAlt,
-  FaHeadphones,
-  FaLaptop,
-  FaGamepad,
-  FaClock,
-  FaCamera,
-  FaShieldAlt,
-  FaTags,
-  FaTruck,
-  FaGem,
-  FaMoneyBillWave,
-  FaCreditCard,
-  FaApple,
-  FaAndroid,
-  FaWindows,
-  FaPlaystation,
-  FaGoogle,
+import { 
+  Smartphone, 
+  Headphones, 
+  Laptop, 
+  Gamepad2, 
+  Watch, 
+  Camera, 
+  ShieldCheck, 
+  Tag, 
+  Truck, 
+  Gem, 
+  MessageSquare,
+  Search,
+  Cpu
+} from 'lucide-react';
+import { 
+  FaApple, 
+  FaAndroid, 
+  FaWindows, 
+  FaPlaystation, 
+  FaGoogle, 
   FaMobile,
+  FaMobileAlt,
+  FaMoneyBillWave,
+  FaCreditCard
 } from 'react-icons/fa';
 import { MdPayments, MdSupportAgent } from 'react-icons/md';
-import {
-  SiOneplus,
-  SiXiaomi,
-  SiLenovo,
-  SiOppo,
-  SiVivo,
-} from 'react-icons/si';
+import { SiOneplus, SiXiaomi, SiLenovo, SiOppo, SiVivo } from 'react-icons/si';
 
 export const ADMIN_NAME = 'saido salley';
 
@@ -40,13 +39,13 @@ export const CONTACT_INFO = {
 };
 
 export const CATEGORIES: Category[] = [
-  { id: '1', name: 'Smartphone', icon: FaMobileAlt },
-  { id: '2', name: 'Accessories', icon: FaHeadphones },
-  { id: '3', name: 'Audio', icon: FaHeadphones },
-  { id: '4', name: 'Computer & Laptop', icon: FaLaptop },
-  { id: '5', name: 'Games & Consoles', icon: FaGamepad },
-  { id: '6', name: 'Watches', icon: FaClock },
-  { id: '7', name: 'Camera', icon: FaCamera },
+  { id: '1', name: 'Smartphone', icon: Smartphone as any },
+  { id: '2', name: 'Accessories', icon: Headphones as any },
+  { id: '3', name: 'Audio', icon: Headphones as any },
+  { id: '4', name: 'Computer & Laptop', icon: Laptop as any },
+  { id: '5', name: 'Games & Consoles', icon: Gamepad2 as any },
+  { id: '6', name: 'Watches', icon: Watch as any },
+  { id: '7', name: 'Camera', icon: Camera as any },
 ];
 
 export const SUPPLIERS: Supplier[] = [
@@ -72,11 +71,11 @@ export const PAYMENT_METHODS: PaymentMethod[] = [
 ];
 
 export const FEATURED_SERVICES: FeaturedService[] = [
-  { title: 'Join Risk Free', desc: '30 days refund guarantee', icon: FaGem },
-  { title: '100% Safe', desc: 'Secure payments encrypted', icon: FaShieldAlt },
-  { title: '24/7 Support', desc: 'Instant expert technical help', icon: MdSupportAgent },
-  { title: 'Best Offers', desc: 'Up to 50% discount deals', icon: FaTags },
-  { title: 'Free Delivery', desc: 'On all orders above $500', icon: FaTruck },
+  { title: 'Join Risk Free', desc: '30 days refund guarantee', icon: Gem as any },
+  { title: '100% Safe', desc: 'Secure payments encrypted', icon: ShieldCheck as any },
+  { title: '24/7 Support', desc: 'Instant expert technical help', icon: MdSupportAgent as any },
+  { title: 'Best Offers', desc: 'Up to 50% discount deals', icon: Tag as any },
+  { title: 'Free Delivery', desc: 'On all orders above $500', icon: Truck as any },
 ];
 
 export const TEAM_MEMBERS: TeamMember[] = [

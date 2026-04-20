@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Product } from '../types';
 import { getProductSuggestion } from '../services/geminiService';
-import { ShoppingCart, GitCompare, Cpu, Star, Flame } from 'lucide-react';
+import { ShoppingCart, GitCompare, Cpu, Star, Flame, ShieldCheck } from 'lucide-react';
 
 interface Props {
   product: Product;
@@ -21,7 +21,7 @@ const ProductCard: React.FC<Props> = ({ product, onAddToCart, isComparing, onTog
     }
     setIsLoadingAi(true);
     const suggestion = await getProductSuggestion(product.name, product.specs);
-    setAiInsight(suggestion || "Highly recommended for professional use.");
+    setAiInsight(suggestion || "Verified for peak operational performance.");
     setIsLoadingAi(false);
   };
 
@@ -66,12 +66,12 @@ const ProductCard: React.FC<Props> = ({ product, onAddToCart, isComparing, onTog
         <button
           onClick={handleGetAiInsight}
           className={`w-12 h-12 ${aiInsight ? 'bg-cyan-500 text-slate-950' : 'bg-white/10 text-white'} backdrop-blur-xl border border-white/20 rounded-2xl hover:bg-cyan-500 hover:text-slate-950 transition-all shadow-xl opacity-0 group-hover:opacity-100 translate-y-2 group-hover:translate-y-0 duration-500 flex items-center justify-center`}
-          title="AI Suggestion"
+          title="Tech Verdict"
         >
           {isLoadingAi ? (
             <div className="w-5 h-5 border-2 border-slate-950 border-t-transparent rounded-full animate-spin" />
           ) : (
-            <Cpu size={20} />
+            <ShieldCheck size={20} />
           )}
         </button>
       </div>
@@ -104,8 +104,8 @@ const ProductCard: React.FC<Props> = ({ product, onAddToCart, isComparing, onTog
         {aiInsight && (
           <div className="bg-cyan-50 p-4 rounded-2xl border border-cyan-100 animate-in fade-in slide-in-from-top-2 duration-300">
             <div className="flex items-center gap-2 mb-2">
-              <Cpu size={14} className="text-cyan-600" />
-              <span className="text-[9px] font-black text-cyan-700 uppercase tracking-widest">AI Recommendation</span>
+              <ShieldCheck size={14} className="text-cyan-600" />
+              <span className="text-[9px] font-black text-cyan-700 uppercase tracking-widest">Tech Verdict</span>
             </div>
             <p className="text-[11px] text-cyan-900 font-medium leading-relaxed italic">"{aiInsight}"</p>
           </div>

@@ -1,8 +1,0 @@
-{
-  "name": "Home of Electronics",
-  "description": "Rwanda's premier premium e-commerce platform for high-end electronics, featuring AI-powered shopping assistance and local payment integrations.",
-  "requestFramePermissions": [
-    "camera",
-    "microphone"
-  ]
-}

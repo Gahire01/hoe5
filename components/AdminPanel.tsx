@@ -549,7 +549,7 @@ const AdminPanel: React.FC<Props> = ({
                       className="text-[9px] font-black uppercase tracking-widest text-cyan-400 hover:text-cyan-300 flex items-center gap-1.5 bg-cyan-500/10 px-3 py-1.5 rounded-full border border-cyan-500/20 transition-all disabled:opacity-30"
                     >
                       {generatingSpecs ? <Loader2 size={10} className="animate-spin" /> : <Sparkles size={10} />}
-                      AI Suggest Specs
+                      Insight Specs
                     </button>
                   </div>
                   <input type="text" value={productForm.specs} onChange={e => setProductForm({ ...productForm, specs: e.target.value })} className={inputCls} placeholder="Processor:A17 Pro, RAM:8GB, Storage:256GB" />

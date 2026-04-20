@@ -1,36 +1,39 @@
-# Home of Electronics
+# ⚡ Home of Electronics – The Tech Authority
 
-Rwanda's premier premium e-commerce platform for high-end electronics, featuring AI-powered shopping assistance and local payment integrations.
+The premium digital storefront for high-end technology in Rwanda. Built for speed, precision, and professional hardware procurement.
 
-## Admin Credentials
+## 🔐 Administrative Access
 - **Email:** `homeofelectronics20@gmail.com`
 - **Password:** `234456`
 
-## Features
-- 🛒 **Product Catalog** – Browse the latest smartphones, laptops, audio gear, and more.
-- 🤖 **AI Shopping Assistant** – Get expert tech advice powered by Google Gemini.
-- 🔍 **Advanced Search** – Search by name, category, or technical specs.
-- 📱 **Mobile Responsive** – Optimized for all devices.
-- 🛍️ **Cart & WhatsApp Ordering** – Add items to cart and order directly via WhatsApp.
-- ⚖️ **Product Comparison** – Compare up to 3 products side-by-side.
-- 🛠️ **Admin Panel** – Add new products with image, price, discount, and stable flag.
-- 🔐 **User Authentication** – Simple login with admin privileges.
+## 🚀 Core Features
+- **Smart Consultant** – Intelligent hardware guidance and tech support.
+- **Dynamic Inventory** – Real-time catalog management for premium devices.
+- **Enterprise Search** – Instant filtering by category, brand, or technical specifications.
+- **Unified Checkout** – Seamless cart management with direct WhatsApp integration.
+- **Hardware Comparison** – Side-by-side technical analysis of up to 3 units.
+- **Mobile Infrastructure** – Fully responsive architecture for all modern devices.
+- **Command Center** – Secure administrative panel for inventory and personnel management.
 
-## Tech Stack
-- React 19 + TypeScript
-- Vite
-- Tailwind CSS v4
-- Google Gemini AI
-- Lucide React Icons
+## 🛠️ Technology Stack
+- **Framework**: React 19 + TypeScript
+- **Build Engine**: Vite 6
+- **Styling Layer**: Tailwind CSS v4
+- **Intelligence**: Google Gemini Engine
+- **Icons**: Lucide & React Icons
+- **Backend**: Supabase (Auth, DB, Storage)
 
-## Setup Instructions
+## 📦 Deployment Guide
+For complete hosting instructions and environment variable documentation, please refer to:
+👉 [**HOSTING_GUIDE.md**](./HOSTING_GUIDE.md)
 
-### Prerequisites
-- Node.js (v18 or later)
-- A Gemini API key from [Google AI Studio](https://aistudio.google.com/)
+For database and storage initialization:
+👉 [**SUPABASE_SETUP.md**](./SUPABASE_SETUP.md)
 
-### Installation
-1. Clone the repository:
-   ```bash
-   git clone <your-repo-url>
-   cd home-of-electronics
+## 🏗️ Local Development
+1. Clone the repository.
+2. Run `npm install` to synchronize dependencies.
+3. Configure your `.env` variables (see [HOSTING_GUIDE.md](./HOSTING_GUIDE.md)).
+4. Execute `npm run dev` to launch the local environment.
+
+Developed for **Home of Electronics, Kigali**.

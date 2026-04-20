@@ -1,11 +1,11 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { getAIResponse } from '../services/geminiService';
-import { Send, Headset, X } from 'lucide-react';
+import { Send, Headset, X, Sparkles } from 'lucide-react';
 
-const AIChatBot: React.FC = () => {
+const SmartAssistant: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<{ role: 'user' | 'model', text: string }[]>([
-    { role: 'model', text: 'Authentication complete. I am your Senior Tech Architect. How can I assist with your hardware procurement today?' }
+    { role: 'model', text: 'Connection established. I am your Senior Tech Consultant. How can I assist with your professional hardware selection today?' }
   ]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -31,7 +31,7 @@ const AIChatBot: React.FC = () => {
     }));
 
     const aiResponse = await getAIResponse(userText, history);
-    setMessages(prev => [...prev, { role: 'model', text: aiResponse || 'No data received.' }]);
+    setMessages(prev => [...prev, { role: 'model', text: aiResponse || 'Data unavailable at this moment.' }]);
     setIsLoading(false);
   };
 
@@ -42,11 +42,11 @@ const AIChatBot: React.FC = () => {
           <div className="bg-slate-950 p-6 flex justify-between items-center text-white border-b border-white/5">
             <div className="flex items-center gap-4">
               <div className="w-10 h-10 bg-cyan-500 rounded-2xl flex items-center justify-center text-slate-900 shadow-lg">
-                <Headset size={20} />
+                <Sparkles size={20} />
               </div>
               <div>
-                <h3 className="font-black text-xs uppercase tracking-widest">Tech Architect AI</h3>
-                <p className="text-[9px] text-cyan-400 font-bold uppercase tracking-widest">Core Status: Active</p>
+                <h3 className="font-black text-xs uppercase tracking-widest text-white">Smart Consultant</h3>
+                <p className="text-[9px] text-cyan-400 font-bold uppercase tracking-widest">Expert Mode Enabled</p>
               </div>
             </div>
             <button onClick={() => setIsOpen(false)} className="text-slate-500 hover:text-white transition-colors">
@@ -83,7 +83,7 @@ const AIChatBot: React.FC = () => {
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && handleSend()}
-              placeholder="Query tech specs..."
+              placeholder="Ask for tech advice..."
               className="flex-1 px-6 py-4 bg-slate-100 rounded-2xl text-xs font-bold focus:outline-none focus:ring-4 focus:ring-cyan-500/10 placeholder:text-slate-400"
             />
             <button
@@ -99,10 +99,10 @@ const AIChatBot: React.FC = () => {
 
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="w-16 h-16 bg-cyan-500 hover:bg-slate-950 text-slate-950 hover:text-cyan-400 rounded-[1.5rem] shadow-2xl flex items-center justify-center transition-all hover:scale-110 active:scale-90 group border border-white/5"
+        className="w-16 h-16 bg-slate-950 hover:bg-cyan-500 text-cyan-400 hover:text-slate-950 rounded-[1.5rem] shadow-2xl flex items-center justify-center transition-all hover:scale-110 active:scale-90 group border border-white/5"
       >
         <div className="relative">
-          <Headset size={28} className="group-hover:rotate-12 transition-transform" />
+          <Sparkles size={28} className="group-hover:rotate-12 transition-transform" />
           <div className="absolute -top-1 -right-1 w-3 h-3 bg-emerald-500 rounded-full border-2 border-white animate-pulse" />
         </div>
       </button>
@@ -110,4 +110,4 @@ const AIChatBot: React.FC = () => {
   );
 };
 
-export default AIChatBot;
+export default SmartAssistant;
