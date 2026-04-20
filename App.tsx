@@ -6,6 +6,7 @@ import StoreLocator from './pages/StoreLocator';
 import TechGuides from './pages/TechGuides';
 import Support from './pages/Support';
 import TopUp from './pages/TopUp';
+import AdminPage from './pages/AdminPage';
 import PrivacyPolicy from './pages/PrivacyPolicy';
 import Terms from './pages/Terms';
 import Refund from './pages/Refund';
@@ -27,6 +28,7 @@ const AppContent: React.FC = () => {
         <Route path="/tech-guides" element={<TechGuides />} />
         <Route path="/support" element={<Support />} />
         <Route path="/top-up" element={<TopUp />} />
+        <Route path="/admin" element={<AdminPage />} />
         <Route path="/privacy" element={<PrivacyPolicy />} />
         <Route path="/terms" element={<Terms />} />
         <Route path="/refund" element={<Refund />} />

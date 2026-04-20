@@ -7,7 +7,8 @@ import {
   Mail,
   MessageCircle,
   MapPin,
-  Phone
+  Phone,
+  Zap
 } from 'lucide-react';
 import { FaTiktok, FaTwitter } from 'react-icons/fa';
 import PaymentIcons from './PaymentIcons';
@@ -45,25 +46,24 @@ const Footer: React.FC = () => {
 
           {/* Logo Section */}
           <div className="space-y-6">
-            <div className="flex items-center gap-3">
-              <img
-                src="/logo.png"
-                alt="Home of Electronics"
-                className="w-10 h-10 md:w-12 md:h-12 object-contain"
-              />
-              <div className="leading-tight">
-                <h2 className="text-lg md:text-xl font-black tracking-tighter">
-                  HOME OF ELECTRONICS
-                </h2>
-                <p className="text-[8px] md:text-[10px] text-cyan-400 tracking-[0.3em] uppercase font-bold">
-                  The Tech Authority
-                </p>
+            <div className="flex flex-col gap-4">
+              <div className="flex items-center gap-2 group cursor-pointer">
+                <div className="w-10 h-10 bg-cyan-400 rounded-xl flex items-center justify-center shadow-lg shadow-cyan-500/20 group-hover:scale-110 transition-transform">
+                  <Zap size={20} className="text-slate-900" strokeWidth={3} />
+                </div>
+                <div className="leading-none">
+                  <h2 className="text-xl font-black tracking-tighter">
+                    HOME<span className="text-cyan-400">OF</span>ELECTRONICS
+                  </h2>
+                  <p className="text-[8px] text-slate-500 tracking-[0.4em] uppercase font-black mt-0.5">
+                    The Tech Authority
+                  </p>
+                </div>
               </div>
             </div>
 
             <p className="text-slate-400 text-sm leading-relaxed font-medium">
-              Your premier destination for the world's most innovative electronics.
-              We bridge the gap between imagination and reality with cutting-edge tech in Rwanda.
+              Rwanda's premium digital infrastructure partner. We source, verify, and architect high-end technology solutions for creators and modern enterprises.
             </p>
 
             <div className="flex gap-3 flex-wrap">
@@ -133,14 +133,14 @@ const Footer: React.FC = () => {
           {/* Legal Info */}
           <div>
             <h3 className="text-xs font-black mb-6 text-cyan-400 uppercase tracking-widest">
-              Legal Info
+              Institutional
             </h3>
             <ul className="space-y-3 text-sm text-slate-400 font-bold">
-              <li><Link to="/privacy" className="hover:text-white transition-colors">Privacy Policy</Link></li>
-              <li><Link to="/terms" className="hover:text-white transition-colors">Terms of Service</Link></li>
+              <li><Link to="/privacy" className="hover:text-white transition-colors">Privacy Protocol</Link></li>
+              <li><Link to="/terms" className="hover:text-white transition-colors">Service Terms</Link></li>
               <li><Link to="/refund" className="hover:text-white transition-colors">Refund Policy</Link></li>
-              <li><Link to="/shipping" className="hover:text-white transition-colors">Shipping Info</Link></li>
-              <li><Link to="/affiliate" className="hover:text-white transition-colors">Affiliate Program</Link></li>
+              <li><Link to="/shipping" className="hover:text-white transition-colors">Logistics & Shipping</Link></li>
+              <li><Link to="/affiliate" className="hover:text-white transition-colors">Affiliate Network</Link></li>
             </ul>
           </div>
 

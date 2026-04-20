@@ -39,13 +39,29 @@ export async function getAIResponse(userPrompt: string, chatHistory: any[]) {
   try {
     const ai = getAI();
     if (!ai) return fallbackResponse(userPrompt);
-    const response = await ai.models.generateContent({
-      model: 'gemini-3-flash-preview',
-      contents: [...chatHistory, { role: 'user', parts: [{ text: userPrompt }] }],
-      config: { temperature: 0.7, maxOutputTokens: 150 }
+    
+    const model = ai.getGenerativeModel({ model: "gemini-1.5-flash" });
+    
+    // Convert chat history to Gemini format
+    const contents = chatHistory.map(msg => ({
+      role: msg.role === 'user' ? 'user' : 'model',
+      parts: [{ text: msg.parts[0].text }]
+    }));
+    
+    contents.push({ role: 'user', parts: [{ text: userPrompt }] });
+
+    const result = await model.generateContent({
+      contents,
+      generationConfig: {
+        temperature: 0.7,
+        maxOutputTokens: 150,
+      },
     });
-    return response.text || fallbackResponse(userPrompt);
-  } catch {
+    
+    const response = await result.response;
+    return response.text() || fallbackResponse(userPrompt);
+  } catch (error) {
+    console.error("Gemini AI error:", error);
     return fallbackResponse(userPrompt);
   }
 }
@@ -54,10 +70,15 @@ export async function getProductSuggestion(productName: string, specs: any) {
   try {
     const ai = getAI();
     if (!ai) return fallbackResponse(productName);
+    
+    const model = ai.getGenerativeModel({ model: "gemini-1.5-flash" });
     const prompt = `Briefly suggest why someone should buy ${productName} with specs ${JSON.stringify(specs)}. Under 40 words.`;
-    const response = await ai.models.generateContent({ model: 'gemini-3-flash-preview', contents: [{ role: 'user', parts: [{ text: prompt }] }] });
-    return response.text || fallbackResponse(productName);
-  } catch {
+    
+    const result = await model.generateContent(prompt);
+    const response = await result.response;
+    return response.text() || fallbackResponse(productName);
+  } catch (error) {
+    console.error("Gemini Suggestion error:", error);
     return fallbackResponse(productName);
   }
 }

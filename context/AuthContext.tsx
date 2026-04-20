@@ -25,12 +25,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const getSession = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (session?.user) {
-        const { data: userData } = await supabase
-          .from('users')
-          .select('*')
-          .eq('id', session.user.id)
-          .single();
-        setUser(userData as User);
+        const metadata = session.user.user_metadata;
+        setUser({
+          id: session.user.id,
+          email: session.user.email || '',
+          name: metadata.name || session.user.email?.split('@')[0] || 'User',
+          role: metadata.role === 'admin' ? 'admin' : 'user',
+          avatar: metadata.avatar || metadata.avatar_url,
+          phone: session.user.phone || metadata.phone,
+        });
       }
       setLoading(false);
     };
@@ -38,12 +41,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     const { data: listener } = supabase.auth.onAuthStateChange(async (_event, session) => {
       if (session?.user) {
-        const { data: userData } = await supabase
-          .from('users')
-          .select('*')
-          .eq('id', session.user.id)
-          .single();
-        setUser(userData as User);
+        const metadata = session.user.user_metadata;
+        setUser({
+          id: session.user.id,
+          email: session.user.email || '',
+          name: metadata.name || session.user.email?.split('@')[0] || 'User',
+          role: metadata.role === 'admin' ? 'admin' : 'user',
+          avatar: metadata.avatar || metadata.avatar_url,
+          phone: session.user.phone || metadata.phone,
+        });
       } else {
         setUser(null);
       }

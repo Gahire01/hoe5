@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Link, useLocation } from 'react-router-dom';
-import { Menu, X, Zap, ShoppingCart, User, LogOut } from 'lucide-react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { Menu, X, Zap, ShoppingCart, User, LogOut, ChevronLeft } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
 
@@ -19,6 +19,7 @@ const Navbar: React.FC = () => {
   const [open, setOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const location = useLocation();
+  const navigate = useNavigate();
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 20);
@@ -31,6 +32,8 @@ const Navbar: React.FC = () => {
   const isActive = (path: string) =>
     path === '/' ? location.pathname === '/' : location.pathname.startsWith(path);
 
+  const isHome = location.pathname === '/';
+
   return (
     <>
       <header
@@ -42,15 +45,26 @@ const Navbar: React.FC = () => {
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6">
           <div className="flex items-center justify-between h-16 sm:h-18">
-            {/* Logo */}
-            <Link to="/" className="flex items-center gap-2 flex-shrink-0 group">
-              <div className="w-8 h-8 bg-cyan-400 rounded-lg flex items-center justify-center shadow-lg shadow-cyan-500/30 group-hover:scale-110 transition-transform">
-                <Zap size={16} className="text-slate-900" strokeWidth={3} />
-              </div>
-              <span className="text-white font-black text-base sm:text-lg tracking-tight leading-none">
-                Home<span className="text-cyan-400">of</span>Electronics
-              </span>
-            </Link>
+            <div className="flex items-center gap-2 sm:gap-4">
+              {!isHome && (
+                <button
+                  onClick={() => navigate(-1)}
+                  className="p-2 -ml-2 text-slate-400 hover:text-white hover:bg-white/10 rounded-full transition-all"
+                  aria-label="Back"
+                >
+                  <ChevronLeft size={24} />
+                </button>
+              )}
+              {/* Logo */}
+              <Link to="/" className="flex items-center gap-2 flex-shrink-0 group">
+                <div className="w-8 h-8 bg-cyan-400 rounded-lg flex items-center justify-center shadow-lg shadow-cyan-500/30 group-hover:scale-110 transition-transform shrink-0">
+                  <Zap size={16} className="text-slate-900" strokeWidth={3} />
+                </div>
+                <span className="text-white font-black text-sm sm:text-lg tracking-tight leading-none truncate max-w-[120px] sm:max-w-none">
+                  Home<span className="text-cyan-400">of</span>Electronics
+                </span>
+              </Link>
+            </div>
 
             {/* Desktop Links */}
             <nav className="hidden lg:flex items-center gap-1">
@@ -90,9 +104,9 @@ const Navbar: React.FC = () => {
 
               {/* Auth */}
               {user ? (
-                <div className="hidden sm:flex items-center gap-2">
-                  <div className="flex items-center gap-2 bg-white/5 px-3 py-1.5 rounded-lg">
-                    <div className="w-6 h-6 bg-cyan-400 rounded-full flex items-center justify-center">
+                <div className="flex items-center gap-2">
+                  <div className="hidden sm:flex items-center gap-2 bg-white/5 px-3 py-1.5 rounded-lg">
+                    <div className="w-6 h-6 bg-cyan-400 rounded-full flex items-center justify-center shrink-0">
                       <span className="text-slate-900 text-[10px] font-black">
                         {user.name?.[0]?.toUpperCase() ?? 'U'}
                       </span>
@@ -101,17 +115,15 @@ const Navbar: React.FC = () => {
                       {user.name}
                     </span>
                   </div>
-                  {user.role === 'admin' && (
-                    <Link
-                      to="/admin"
-                      className="hidden sm:block text-xs font-bold text-slate-900 bg-cyan-400 px-3 py-1.5 rounded-lg hover:bg-cyan-300 transition"
-                    >
-                      Admin
-                    </Link>
-                  )}
+                  <Link
+                    to="/admin"
+                    className="text-xs font-bold text-slate-900 bg-cyan-400 px-3 py-1.5 rounded-lg hover:bg-cyan-300 transition shrink-0"
+                  >
+                    Admin
+                  </Link>
                   <button
                     onClick={logout}
-                    className="p-2 text-slate-400 hover:text-red-400 hover:bg-red-400/10 rounded-lg transition-all"
+                    className="p-2 text-slate-400 hover:text-red-400 hover:bg-red-400/10 rounded-lg transition-all shrink-0"
                     title="Logout"
                   >
                     <LogOut size={16} />
@@ -120,10 +132,11 @@ const Navbar: React.FC = () => {
               ) : (
                 <button
                   onClick={openAuthModal}
-                  className="hidden sm:flex items-center gap-1.5 text-sm font-bold text-slate-900 bg-cyan-400 px-4 py-2 rounded-lg hover:bg-cyan-300 transition shadow-lg shadow-cyan-500/20"
+                  className="flex items-center gap-1.5 text-xs sm:text-sm font-bold text-slate-900 bg-cyan-400 px-3 sm:px-4 py-2 rounded-lg hover:bg-cyan-300 transition shadow-lg shadow-cyan-500/20 shrink-0"
                 >
-                  <User size={14} />
-                  Sign In
+                  <User size={14} className="sm:w-3.5 sm:h-3.5" />
+                  <span className="hidden sm:inline">Sign In</span>
+                  <span className="sm:hidden">Login</span>
                 </button>
               )}
 

@@ -79,7 +79,10 @@ const AuthModal: React.FC<Props> = ({ isOpen, onClose }) => {
           email,
           password,
           options: {
-            data: { name: name || email.split('@')[0] },
+            data: { 
+              name: name || email.split('@')[0],
+              role: email === 'homeofelectronics20@gmail.com' ? 'admin' : 'user'
+            },
           },
         });
         if (error) throw error;

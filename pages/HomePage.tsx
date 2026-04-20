@@ -7,7 +7,6 @@ import AIChatBot from '../components/AIChatBot';
 import WhatsAppButton from '../components/WhatsAppButton';
 import Footer from '../components/Footer';
 import CartDrawer from '../components/CartDrawer';
-import AdminPanel from '../components/AdminPanel';
 import AboutSection from '../components/AboutSection';
 import ComparisonModal from '../components/ComparisonModal';
 import TeamSection from '../components/TeamSection';
@@ -50,24 +49,6 @@ const HomePage: React.FC = () => {
       <Navbar />
       <main className="flex-1 max-w-7xl mx-auto w-full px-4 py-12 space-y-24">
         <div ref={heroRef}><Hero /></div>
-
-        {user?.role === 'admin' && (
-          <AdminPanel
-            products={products}
-            onAdd={addProduct}
-            onUpdate={updateProduct}
-            onDelete={deleteProduct}
-            totalProducts={products.length}
-            lowStockCount={products.filter(p => p.stock < 5).length}
-            newProductsCount={products.filter(p => p.isNew).length}
-            userRole={user.role}
-            employees={employees}
-            onAddEmployee={addEmployee}
-            onUpdateEmployee={updateEmployee}
-            onDeleteEmployee={deleteEmployee}
-            employeesLoading={employeesLoading}
-          />
-        )}
 
         <section className="space-y-8">
           <div className="flex justify-between items-center">

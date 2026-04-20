@@ -132,102 +132,106 @@ const TopUpModal: React.FC<Props> = ({ isOpen, onClose, user }) => {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-      <div className="bg-white rounded-[2rem] shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
-        <div className="flex items-center justify-between p-6 pb-4 border-b border-slate-100">
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/60 backdrop-blur-sm">
+      <div className="bg-white rounded-t-[2.5rem] sm:rounded-[2.5rem] shadow-2xl w-full max-w-lg max-h-[95vh] sm:max-h-[90vh] overflow-y-auto">
+        <div className="sticky top-0 bg-white z-10 flex items-center justify-between p-6 pb-4 border-b border-slate-100">
           <div>
-            <h2 className="text-2xl font-black text-slate-900">Trade‑In Request</h2>
-            <p className="text-slate-400 text-sm mt-0.5">Upload photos of your device</p>
+            <h2 className="text-xl sm:text-2xl font-black text-slate-900">Trade‑In Request</h2>
+            <p className="text-slate-400 text-xs sm:text-sm mt-0.5">Upload photos of your device</p>
           </div>
           <button
             onClick={onClose}
             disabled={status === 'uploading'}
-            className="p-2 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-xl transition disabled:opacity-30"
+            className="p-3 -mr-2 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-full transition disabled:opacity-30"
           >
-            <X size={20} />
+            <X size={24} />
           </button>
         </div>
 
         {status === 'success' ? (
-          <div className="p-10 text-center">
+          <div className="p-8 sm:p-10 text-center">
             <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
               <CheckCircle size={40} className="text-green-500" />
             </div>
             <h3 className="text-2xl font-black text-slate-900 mb-2">Request Sent! 🎉</h3>
-            <p className="text-slate-500 mb-2">
+            <p className="text-slate-500 mb-6 text-sm">
               WhatsApp opened with your request and direct links to your photos.
               The admin will review and contact you shortly.
             </p>
             <button
               onClick={() => { reset(); onClose(); }}
-              className="mt-6 bg-cyan-400 text-slate-900 font-black px-8 py-3 rounded-xl hover:bg-cyan-300 transition"
+              className="w-full sm:w-auto bg-cyan-400 text-slate-900 font-black px-12 py-4 rounded-2xl hover:bg-cyan-300 transition shadow-lg shadow-cyan-200"
             >
-              Done
+              DONE
             </button>
           </div>
         ) : (
-          <div className="p-6 space-y-5">
+          <div className="p-6 pb-10 space-y-6">
             {errorMsg && (
-              <div className="flex items-start gap-2 bg-red-50 text-red-600 text-sm px-4 py-3 rounded-xl border border-red-100">
-                <AlertCircle size={16} className="flex-shrink-0 mt-0.5" />
+              <div className="flex items-start gap-3 bg-red-50 text-red-600 text-xs sm:text-sm px-4 py-4 rounded-2xl border border-red-100 animate-in fade-in slide-in-from-top-2">
+                <AlertCircle size={18} className="flex-shrink-0" />
                 <span>{errorMsg}</span>
               </div>
             )}
 
             {!authUser && (
-              <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 text-center">
-                <p className="text-sm text-amber-800 font-medium mb-3">
+              <div className="bg-amber-50 border border-amber-200 rounded-[2rem] p-6 text-center">
+                <p className="text-sm text-amber-800 font-bold mb-4">
                   Please sign in to continue with your trade‑in request.
                 </p>
                 <button
                   onClick={() => openAuthModal?.()}
-                  className="inline-flex items-center gap-2 bg-amber-500 text-white px-6 py-2 rounded-xl font-bold text-sm hover:bg-amber-600 transition"
+                  className="w-full flex items-center justify-center gap-2 bg-amber-500 text-white py-4 rounded-2xl font-black text-xs tracking-widest uppercase hover:bg-amber-600 transition shadow-lg shadow-amber-200"
                 >
                   <User size={16} /> Sign In
                 </button>
               </div>
             )}
 
-            <div>
-              <label className="block text-sm font-bold text-slate-700 mb-1.5">Your Phone Number *</label>
-              <input
-                type="tel"
-                value={phone}
-                onChange={e => setPhone(e.target.value)}
-                placeholder="+250 7XX XXX XXX"
-                className="w-full border border-slate-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-cyan-400"
-                disabled={status === 'uploading' || !authUser}
-              />
+            <div className="grid grid-cols-1 gap-5">
+              <div>
+                <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Your Phone Number *</label>
+                <input
+                  type="tel"
+                  value={phone}
+                  onChange={e => setPhone(e.target.value)}
+                  placeholder="+250 7XX XXX XXX"
+                  className="w-full bg-slate-50 border border-slate-200 rounded-2xl px-5 py-4 text-sm font-bold focus:outline-none focus:ring-2 focus:ring-cyan-400 transition-all"
+                  disabled={status === 'uploading' || !authUser}
+                />
+              </div>
+
+              <div>
+                <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Device Model *</label>
+                <input
+                  type="text"
+                  value={phoneModel}
+                  onChange={e => setPhoneModel(e.target.value)}
+                  placeholder="e.g. iPhone 12 Pro, Samsung S21"
+                  className="w-full bg-slate-50 border border-slate-200 rounded-2xl px-5 py-4 text-sm font-bold focus:outline-none focus:ring-2 focus:ring-cyan-400 transition-all"
+                  disabled={status === 'uploading' || !authUser}
+                />
+              </div>
             </div>
 
             <div>
-              <label className="block text-sm font-bold text-slate-700 mb-1.5">Device Model *</label>
-              <input
-                type="text"
-                value={phoneModel}
-                onChange={e => setPhoneModel(e.target.value)}
-                placeholder="e.g. iPhone 12 Pro, Samsung S21"
-                className="w-full border border-slate-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-cyan-400"
-                disabled={status === 'uploading' || !authUser}
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-bold text-slate-700 mb-1.5">
+              <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">
                 Photos of Your Device *
-                <span className="text-slate-400 font-normal ml-1">(up to {MAX_IMAGES})</span>
+                <span className="text-slate-400 font-normal ml-2 lowercase">({images.length}/{MAX_IMAGES})</span>
               </label>
               <div
                 onClick={() => status === 'idle' && authUser && fileRef.current?.click()}
                 onDragOver={e => e.preventDefault()}
                 onDrop={e => { e.preventDefault(); if (authUser) handleFiles(e.dataTransfer.files); }}
-                className={`border-2 border-dashed rounded-xl p-5 text-center transition-all group
-                  ${status === 'idle' && authUser ? 'cursor-pointer hover:border-cyan-400 hover:bg-cyan-50/40' : 'opacity-60 cursor-not-allowed'}
-                  ${previews.length > 0 ? 'border-cyan-200 bg-cyan-50/20' : 'border-slate-200'}`}
+                className={`border-2 border-dashed rounded-[2rem] p-8 text-center transition-all group
+                  ${status === 'idle' && authUser ? 'cursor-pointer border-slate-200 hover:border-cyan-400 hover:bg-cyan-50/40' : 'opacity-60 cursor-not-allowed border-slate-100'}
+                  ${previews.length > 0 ? 'border-cyan-200 bg-cyan-50/20' : ''}`}
               >
-                <ImagePlus size={24} className="mx-auto text-slate-300 group-hover:text-cyan-400 mb-2 transition-colors" />
-                <p className="text-sm font-semibold text-slate-500">Click or drag photos here</p>
-                <p className="text-xs text-slate-400 mt-1">JPEG, PNG, WebP — max 10 MB each</p>
+                <div className="w-14 h-14 bg-slate-100 rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:bg-cyan-100 group-hover:text-cyan-600 transition-colors text-slate-400">
+                  <ImagePlus size={28} />
+                </div>
+                <p className="text-sm font-black text-slate-700">Add Photos</p>
+                <p className="text-[10px] text-slate-400 mt-1 uppercase tracking-wider font-bold">JPEG, PNG, WebP · MAX 10MB</p>
                 <input
                   ref={fileRef}
                   type="file"
@@ -240,16 +244,16 @@ const TopUpModal: React.FC<Props> = ({ isOpen, onClose, user }) => {
               </div>
 
               {previews.length > 0 && (
-                <div className="grid grid-cols-4 gap-2 mt-3">
+                <div className="grid grid-cols-3 sm:grid-cols-5 gap-3 mt-4">
                   {previews.map((url, i) => (
                     <div key={i} className="relative group aspect-square">
-                      <img src={url} alt={`device-${i}`} className="w-full h-full object-cover rounded-xl border border-slate-100" />
+                      <img src={url} alt={`device-${i}`} className="w-full h-full object-cover rounded-xl border border-slate-100 shadow-sm" />
                       {status === 'idle' && (
                         <button
                           onClick={() => removeImage(i)}
-                          className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition shadow"
+                          className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center shadow-lg hover:scale-110 transition-transform"
                         >
-                          <X size={10} />
+                          <X size={12} />
                         </button>
                       )}
                     </div>
@@ -259,17 +263,17 @@ const TopUpModal: React.FC<Props> = ({ isOpen, onClose, user }) => {
             </div>
 
             {status === 'uploading' && (
-              <div>
-                <div className="flex justify-between text-xs text-slate-500 mb-1.5">
-                  <span className="flex items-center gap-1.5">
-                    <Loader2 size={12} className="animate-spin" />
-                    Uploading photos…
+              <div className="space-y-3 animate-in fade-in duration-500">
+                <div className="flex justify-between text-[10px] font-black uppercase tracking-widest text-slate-500">
+                  <span className="flex items-center gap-2">
+                    <Loader2 size={14} className="animate-spin text-cyan-500" />
+                    Transmitting Data…
                   </span>
-                  <span className="font-bold">{progress}%</span>
+                  <span className="text-cyan-600">{progress}%</span>
                 </div>
-                <div className="w-full bg-slate-100 rounded-full h-2 overflow-hidden">
+                <div className="w-full bg-slate-100 rounded-full h-3 overflow-hidden shadow-inner">
                   <div
-                    className="h-2 bg-cyan-400 rounded-full transition-all duration-300"
+                    className="h-full bg-gradient-to-r from-cyan-400 to-cyan-500 rounded-full transition-all duration-300"
                     style={{ width: `${progress}%` }}
                   />
                 </div>
@@ -277,27 +281,27 @@ const TopUpModal: React.FC<Props> = ({ isOpen, onClose, user }) => {
             )}
 
             {status === 'error' && (
-              <button onClick={reset} className="text-sm text-cyan-600 font-semibold underline underline-offset-2">
-                ↺ Try again
+              <button onClick={reset} className="w-full py-3 text-xs font-black uppercase tracking-widest text-cyan-600 hover:text-cyan-700 transition-colors">
+                ↺ Initialization Failed. Retry Protocol.
               </button>
             )}
 
             <button
               onClick={handleSubmit}
               disabled={status !== 'idle' || !authUser}
-              className="w-full flex items-center justify-center gap-2 bg-cyan-400 text-slate-900 font-black py-4 rounded-xl hover:bg-cyan-300 disabled:opacity-50 disabled:cursor-not-allowed transition text-sm tracking-widest uppercase shadow-lg shadow-cyan-200"
+              className="w-full flex items-center justify-center gap-3 bg-slate-900 text-white font-black py-5 rounded-2xl hover:bg-slate-800 disabled:opacity-50 disabled:cursor-not-allowed transition-all text-xs tracking-[0.2em] uppercase shadow-xl shadow-slate-200 active:scale-[0.98]"
             >
               {status === 'uploading' ? (
-                <><Loader2 size={16} className="animate-spin" /> Uploading {progress}%…</>
+                <><Loader2 size={18} className="animate-spin" /> PROCESSING {progress}%</>
               ) : !authUser ? (
-                <><User size={16} /> Sign In to Continue</>
+                <><User size={18} /> AUTHORIZATION REQUIRED</>
               ) : (
-                <><Upload size={16} /> Send Request via WhatsApp</>
+                <><Upload size={18} /> INITIATE TRADE-IN</>
               )}
             </button>
 
-            <p className="text-center text-xs text-slate-400">
-              Your photos are uploaded securely. The admin will receive direct links to view them.
+            <p className="text-center text-[9px] font-bold text-slate-400 uppercase tracking-widest leading-loose">
+              Secure transmission layer active. <br/> WhatsApp endpoint: 250780615795
             </p>
           </div>
         )}
