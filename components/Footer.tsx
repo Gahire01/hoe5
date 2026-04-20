@@ -48,11 +48,13 @@ const Footer: React.FC = () => {
           <div className="space-y-6">
             <div className="flex flex-col gap-4">
               <div className="flex items-center gap-2 group cursor-pointer">
-                <div className="w-10 h-10 bg-cyan-400 rounded-xl flex items-center justify-center shadow-lg shadow-cyan-500/20 group-hover:scale-110 transition-transform">
-                  <Zap size={20} className="text-slate-900" strokeWidth={3} />
-                </div>
+                <img 
+                  src="/logo.png" 
+                  alt="Home of Electronics" 
+                  className="w-12 h-12 object-contain group-hover:scale-110 transition-transform" 
+                />
                 <div className="leading-none">
-                  <h2 className="text-xl font-black tracking-tighter">
+                  <h2 className="text-xl font-black tracking-tighter text-white">
                     HOME<span className="text-cyan-400">OF</span>ELECTRONICS
                   </h2>
                   <p className="text-[8px] text-slate-500 tracking-[0.4em] uppercase font-black mt-0.5">

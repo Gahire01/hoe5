@@ -57,9 +57,11 @@ const Navbar: React.FC = () => {
               )}
               {/* Logo */}
               <Link to="/" className="flex items-center gap-2 flex-shrink-0 group">
-                <div className="w-8 h-8 bg-cyan-400 rounded-lg flex items-center justify-center shadow-lg shadow-cyan-500/30 group-hover:scale-110 transition-transform shrink-0">
-                  <Zap size={16} className="text-slate-900" strokeWidth={3} />
-                </div>
+                <img 
+                  src="/logo.png" 
+                  alt="Home of Electronics" 
+                  className="w-10 h-10 object-contain group-hover:scale-110 transition-transform shrink-0" 
+                />
                 <span className="text-white font-black text-sm sm:text-lg tracking-tight leading-none truncate max-w-[120px] sm:max-w-none">
                   Home<span className="text-cyan-400">of</span>Electronics
                 </span>

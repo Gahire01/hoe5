@@ -5,7 +5,7 @@ import { Send, Headset, X, Sparkles } from 'lucide-react';
 const SmartAssistant: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<{ role: 'user' | 'model', text: string }[]>([
-    { role: 'model', text: 'Connection established. I am your Senior Tech Consultant. How can I assist with your professional hardware selection today?' }
+    { role: 'model', text: 'Hello! Welcome to Home of Electronics. I am your Smart Tech Consultant. How can I help you find the perfect gadget today?' }
   ]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
