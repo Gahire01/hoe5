@@ -10,29 +10,29 @@ import {
   Phone,
   Zap
 } from 'lucide-react';
-import { FaTiktok, FaTwitter } from 'react-icons/fa';
+import { FaTiktok, FaTwitter, FaWhatsapp } from 'react-icons/fa';
 import PaymentIcons from './PaymentIcons';
 
 const Footer: React.FC = () => {
   return (
-    <footer className="bg-slate-950 text-white pt-16 pb-8 md:pt-24 md:pb-12">
-      <div className="max-w-7xl mx-auto px-4 md:px-6">
+    <footer className="bg-slate-950 text-white pt-8 pb-5 md:pt-10 md:pb-6">
+      <div className="max-w-7xl mx-auto px-4 md:px-8">
 
         {/* Suppliers Section */}
-        <div className="mb-16 md:mb-24">
-          <h3 className="text-center text-[10px] font-black text-slate-500 uppercase tracking-[0.5em] mb-8 md:mb-12">
+        <div className="mb-8 md:mb-10">
+          <h3 className="text-center text-[9px] font-black text-slate-500 uppercase tracking-[0.4em] mb-6 md:mb-8">
             Authorized Global Partners
           </h3>
-          <div className="flex flex-wrap justify-center items-center gap-6 md:gap-12 opacity-60 hover:opacity-100 transition-opacity duration-700">
+          <div className="flex flex-wrap justify-center items-center gap-5 md:gap-8 opacity-60 hover:opacity-100 transition-opacity duration-700">
             {SUPPLIERS.map((supplier, i) => {
               const Icon = supplier.icon;
               return (
-                <div key={i} className="flex flex-col items-center group">
+                <div key={i} className="flex flex-col items-center group cursor-pointer">
                   <Icon
-                    size={32}
-                    className="text-slate-400 group-hover:text-cyan-400 transition-colors"
+                    size={28}
+                    className={`text-slate-500 transition-all duration-300 group-hover:scale-110 ${supplier.color || 'group-hover:text-cyan-400'}`}
                   />
-                  <span className="text-[8px] mt-1 text-slate-500 group-hover:text-cyan-400">
+                  <span className={`text-[7px] mt-1.5 text-slate-600 uppercase font-black tracking-tighter transition-colors ${supplier.color?.replace('hover:', 'group-hover:') || 'group-hover:text-cyan-400'}`}>
                     {supplier.name}
                   </span>
                 </div>
@@ -42,54 +42,44 @@ const Footer: React.FC = () => {
         </div>
 
         {/* Main Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-10 md:gap-16 mb-16">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 md:gap-8 mb-8">
 
           {/* Logo Section */}
-          <div className="space-y-6">
-            <div className="flex flex-col gap-4">
+          <div className="space-y-4">
+            <div className="flex flex-col gap-3">
               <div className="flex items-center gap-2 group cursor-pointer">
                 <img 
                   src="/logo.png" 
                   alt="Home of Electronics" 
-                  className="w-12 h-12 object-contain group-hover:scale-110 transition-transform" 
+                  className="w-10 h-10 object-contain group-hover:scale-110 transition-transform" 
                 />
                 <div className="leading-none">
-                  <h2 className="text-xl font-black tracking-tighter text-white">
+                  <h2 className="text-lg font-black tracking-tighter text-white">
                     HOME<span className="text-cyan-400">OF</span>ELECTRONICS
                   </h2>
-                  <p className="text-[8px] text-slate-500 tracking-[0.4em] uppercase font-black mt-0.5">
+                  <p className="text-[7px] text-slate-500 tracking-[0.3em] uppercase font-black mt-0.5">
                     The Tech Authority
                   </p>
                 </div>
               </div>
             </div>
 
-            <p className="text-slate-400 text-sm leading-relaxed font-medium">
-              Rwanda's premium digital infrastructure partner. We source, verify, and architect high-end technology solutions for creators and modern enterprises.
+            <p className="text-slate-400 text-xs leading-relaxed font-medium">
+              Rwanda's premium digital infrastructure partner. Sourcing high-end technology for creators and enterprises.
             </p>
 
-            <div className="flex gap-3 flex-wrap">
-              <a className="w-10 h-10 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center hover:bg-cyan-500 hover:text-slate-950 transition-all">
-                <Facebook size={18} />
-              </a>
-              <a className="w-10 h-10 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center hover:bg-cyan-500 hover:text-slate-950 transition-all">
-                <Instagram size={18} />
-              </a>
-              <a className="w-10 h-10 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center hover:bg-cyan-500 hover:text-slate-950 transition-all">
-                <FaTwitter size={18} />
-              </a>
-              <a
-                href="https://tiktok.com/@homeofelectronics"
-                className="w-10 h-10 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center hover:bg-cyan-500 hover:text-slate-950 transition-all"
-              >
-                <FaTiktok size={18} />
-              </a>
-              <a
-                href={`https://wa.me/${CONTACT_INFO.phone.replace(/\s+/g, '')}`}
-                className="w-10 h-10 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center hover:bg-cyan-500 hover:text-slate-950 transition-all"
-              >
-                <MessageCircle size={18} />
-              </a>
+            <div className="flex gap-2 flex-wrap">
+              {[
+                { icon: Facebook, href: "#" },
+                { icon: Instagram, href: "#" },
+                { icon: FaTwitter, href: "#" },
+                { icon: FaTiktok, href: "https://tiktok.com/@homeofelectronics" },
+                { icon: MessageCircle, href: `https://wa.me/${CONTACT_INFO.phone.replace(/\s+/g, '')}` }
+              ].map((social, idx) => (
+                <a key={idx} href={social.href} className="w-8 h-8 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center hover:bg-cyan-500 hover:text-slate-950 transition-all group">
+                  <social.icon size={14} className="group-hover:scale-110 transition-transform" />
+                </a>
+              ))}
             </div>
           </div>
 
@@ -151,7 +141,7 @@ const Footer: React.FC = () => {
             <h3 className="text-xs font-black text-cyan-400 uppercase tracking-widest">
               Contact Us
             </h3>
-            <div className="space-y-4 text-sm text-slate-400 font-medium">
+            <div className="space-y-3 text-sm text-slate-400 font-medium">
               <p className="flex items-start gap-3">
                 <MapPin size={18} className="text-cyan-500 mt-1" />
                 {CONTACT_INFO.location}
@@ -164,6 +154,15 @@ const Footer: React.FC = () => {
                 <Mail size={18} className="text-cyan-500" />
                 {CONTACT_INFO.email}
               </p>
+              <a 
+                href={`https://wa.me/${CONTACT_INFO.whatsapp}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-3 hover:text-white transition-colors"
+              >
+                <FaWhatsapp size={18} className="text-emerald-500" />
+                WhatsApp Business Chat
+              </a>
               <div className="bg-white/5 p-4 rounded-xl border border-white/10">
                 <h4 className="text-white text-[10px] font-black uppercase tracking-widest mb-2">
                   Offline Stores
@@ -177,7 +176,7 @@ const Footer: React.FC = () => {
         </div>
 
         {/* Payments */}
-        <div className="mb-10">
+        <div className="mb-6">
           <h3 className="text-xs font-black text-cyan-400 uppercase tracking-widest mb-4">
             We Accept
           </h3>
@@ -185,7 +184,7 @@ const Footer: React.FC = () => {
         </div>
 
         {/* Bottom */}
-        <div className="pt-8 border-t border-white/5 flex flex-col md:flex-row justify-between items-center gap-4 text-center md:text-left">
+        <div className="pt-5 border-t border-white/5 flex flex-col md:flex-row justify-between items-center gap-3 text-center md:text-left">
           <p className="text-slate-500 text-[9px] md:text-[10px] font-black uppercase tracking-widest">
             © 2026 <span className="text-white">Home of Electronics</span>. All rights reserved.
           </p>

@@ -2,17 +2,12 @@ import React from 'react';
 import { MapPin, Phone, Mail } from 'lucide-react';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
-import { useAuth } from '../hooks/useAuth';
-import { useCart } from '../hooks/useCart';
 import { CONTACT_INFO } from '../constants';
 
 const StoreLocator: React.FC = () => {
-  const { user } = useAuth();
-  const { cartCount } = useCart();
-
   return (
     <div className="min-h-screen bg-slate-50">
-      <Navbar cartCount={cartCount} onSearch={()=>{}} onOpenCart={()=>{}} onOpenAuth={()=>{}} user={user} onLogout={()=>{}} />
+      <Navbar />
       <div className="max-w-7xl mx-auto px-4 py-20">
         <h1 className="text-5xl font-black text-slate-900 mb-8 tracking-tighter">Store Locator</h1>
         <div className="grid md:grid-cols-2 gap-12">
@@ -22,7 +17,7 @@ const StoreLocator: React.FC = () => {
             <p className="text-slate-500">Visit us at Makuza Peace Plaza, Kigali Mall, First Floor, Unit 12B. Open Mon‑Sat 9am‑8pm, Sun 10am‑6pm.</p>
           </div>
           <div className="rounded-[3rem] overflow-hidden h-[400px] shadow-2xl border-8 border-slate-50">
-            <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3987.503463665392!2d30.0594386!3d-1.9441112!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x19dca42978059047%3A0x6281096752398162!2sMakuza%20Peace%20Plaza!5e0!3m2!1sen!2srw!4v1700000000000!5m2!1sen!2srw" width="100%" height="100%" style={{ border: 0 }} allowFullScreen loading="lazy" className="grayscale hover:grayscale-0 transition-all duration-700"></iframe>
+            <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3987.503463665392!2d30.0594386!3d-1.9441112!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x19dca42978059047%3A0x6281096752398162!2sMakuza%20Peace%20Plaza!5e0!3m2!1sen!2srw!4v1700000000000!5m2!1sen!2srw" width="100%" height="100%" style={{ border: 0 }} allowFullScreen loading="lazy" className="transition-all duration-500"></iframe>
           </div>
         </div>
       </div>

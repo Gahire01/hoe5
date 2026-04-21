@@ -10,6 +10,8 @@ import { supabase } from '../supabase';
 import { uploadFileToSupabase, validateImageFile } from '../storageService';
 import { useAuth } from '../context/AuthContext';
 import { getProductSuggestion } from '../services/geminiService';
+import { useTopUpRequests } from '../hooks/useTopUpRequests';
+import { ShoppingCart, MessageSquare, History } from 'lucide-react';
 
 interface Props {
   products: Product[];
@@ -166,7 +168,8 @@ const AdminPanel: React.FC<Props> = ({
   employees, onAddEmployee, onUpdateEmployee, onDeleteEmployee, employeesLoading
 }) => {
   const { user } = useAuth();
-  const [activeTab, setActiveTab] = useState<'products' | 'employees' | 'profile'>('products');
+  const { requests: topUpRequests, updateRequest: updateTopUpRequest, deleteRequest: deleteTopUpRequest } = useTopUpRequests();
+  const [activeTab, setActiveTab] = useState<'products' | 'employees' | 'profile' | 'requests'>('products');
   const [globalError, setGlobalError] = useState('');
   const [globalSuccess, setGlobalSuccess] = useState('');
   const [submitting, setSubmitting] = useState(false);
@@ -426,6 +429,13 @@ const AdminPanel: React.FC<Props> = ({
       {/* Tabs */}
       <div className="flex gap-2 mb-8 border-b border-slate-800 overflow-x-auto">
         <button onClick={() => setActiveTab('products')} className={tabCls('products')}>Products</button>
+        <button onClick={() => setActiveTab('requests')} className={tabCls('requests')}>
+          Requests {topUpRequests.filter(r => r.status === 'pending').length > 0 && (
+            <span className="ml-2 bg-cyan-500 text-slate-950 px-1.5 py-0.5 rounded-full text-[8px] animate-pulse">
+              {topUpRequests.filter(r => r.status === 'pending').length}
+            </span>
+          )}
+        </button>
         <button onClick={() => setActiveTab('employees')} className={tabCls('employees')}>Employees</button>
         <button onClick={() => setActiveTab('profile')} className={tabCls('profile')}>Profile</button>
       </div>
@@ -615,7 +625,7 @@ const AdminPanel: React.FC<Props> = ({
                             <h4 className="text-white font-black text-[11px] truncate uppercase tracking-widest group-hover:text-cyan-400 transition-colors">{product.name}</h4>
                             <div className="flex gap-1">
                               <button onClick={() => setEditingProduct(product)} className="text-slate-600 hover:text-cyan-400 p-1.5 hover:bg-cyan-500/10 rounded-lg transition-all"><Edit size={14} /></button>
-                              <button onClick={() => handleDeleteProduct(product.id)} className="text-slate-600 hover:text-red-400 p-1.5 hover:bg-red-500/10 rounded-lg transition-all"><Trash2 size={14} /></button>
+                              <button onClick={() => handleDeleteProduct(product.id)} className="text-slate-500 hover:text-red-500 p-2 hover:bg-red-500/10 rounded-xl transition-all"><Trash2 size={16} /></button>
                             </div>
                           </div>
                           <p className="text-cyan-500 font-black text-sm mt-1">{product.price.toLocaleString()} Rwf</p>
@@ -719,6 +729,84 @@ const AdminPanel: React.FC<Props> = ({
             </div>
           )}
         </>
+      )}
+
+      {/* ───── REQUESTS TAB ───── */}
+      {activeTab === 'requests' && (
+        <div className="relative z-10 space-y-6">
+          <div className="flex justify-between items-end border-b border-slate-800 pb-4">
+            <div>
+              <h3 className="text-white font-black text-sm uppercase tracking-widest mb-1 flex items-center gap-2">
+                <MessageSquare size={16} className="text-cyan-500" /> Trade‑In Requests
+              </h3>
+              <p className="text-slate-500 text-[10px] font-black uppercase tracking-widest">Verify & Process User Submissions</p>
+            </div>
+          </div>
+
+          {topUpRequests.length === 0 ? (
+            <div className="bg-slate-800/20 border border-dashed border-slate-800 rounded-[3rem] p-20 text-center">
+              <div className="w-20 h-20 bg-slate-800 rounded-[2rem] flex items-center justify-center mx-auto mb-6 text-slate-700">
+                <History size={40} />
+              </div>
+              <p className="text-slate-600 font-black text-xs uppercase tracking-[0.3em]">No Pending Requests</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 gap-6">
+              {topUpRequests.map(req => (
+                <div key={req.id} className="bg-slate-800/30 backdrop-blur-sm border border-slate-700/50 rounded-[2.5rem] p-8 hover:bg-slate-800/50 transition-all group overflow-hidden relative">
+                  <div className={`absolute top-0 right-0 px-6 py-2 rounded-bl-2xl text-[9px] font-black uppercase tracking-widest ${
+                    req.status === 'pending' ? 'bg-amber-500 text-slate-950' : 
+                    req.status === 'in-progress' ? 'bg-cyan-500 text-slate-950' : 
+                    'bg-emerald-500 text-slate-950'
+                  }`}>
+                    {req.status}
+                  </div>
+
+                  <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                    <div className="lg:col-span-1 space-y-4">
+                      <div>
+                        <p className="text-[10px] text-slate-500 font-black uppercase tracking-widest mb-1">User Identity</p>
+                        <h4 className="text-white font-black text-lg">{req.user_name}</h4>
+                        <p className="text-cyan-400 font-bold text-sm">{req.phone}</p>
+                      </div>
+                      <div>
+                        <p className="text-[10px] text-slate-500 font-black uppercase tracking-widest mb-1">Inquiry / Message</p>
+                        <p className="text-slate-300 text-xs leading-relaxed">{req.message}</p>
+                      </div>
+                      <div className="flex gap-2 pt-2">
+                        {req.status !== 'completed' && (
+                          <button 
+                            onClick={() => updateTopUpRequest(req.id, { status: req.status === 'pending' ? 'in-progress' : 'completed' })}
+                            className="bg-cyan-500 hover:bg-cyan-400 text-slate-950 px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all"
+                          >
+                            {req.status === 'pending' ? 'Start Processing' : 'Mark Complete'}
+                          </button>
+                        )}
+                        <button 
+                          onClick={() => deleteTopUpRequest(req.id)}
+                          className="bg-slate-900 hover:bg-red-500/20 text-slate-500 hover:text-red-400 px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all border border-slate-700"
+                        >
+                          Archive
+                        </button>
+                      </div>
+                    </div>
+
+                    <div className="lg:col-span-2">
+                      <p className="text-[10px] text-slate-500 font-black uppercase tracking-widest mb-3">Device Evidence ({Array.isArray(req.images) ? req.images.length : 0})</p>
+                      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+                        {(Array.isArray(req.images) ? req.images : []).map((img, i) => (
+                          <a key={i} href={img} target="_blank" rel="noopener noreferrer" className="aspect-square rounded-2xl overflow-hidden bg-slate-900 border border-slate-700/50 hover:border-cyan-500/50 transition-all group/img">
+                            <img src={img} alt="" className="w-full h-full object-cover group-hover/img:scale-110 transition-transform duration-500" />
+                          </a>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
       )}
 
       {/* ───── EMPLOYEES TAB ───── */}

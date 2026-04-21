@@ -1,15 +1,28 @@
 import React, { useState } from 'react';
-import { Smartphone, RefreshCw, Award } from 'lucide-react';
+import { Smartphone, RefreshCw, Award, ArrowLeft } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import TopUpModal from '../components/TopUpModal';
 import { useAuth } from '../hooks/useAuth';
+import Navbar from '../components/Navbar';
+import Footer from '../components/Footer';
 
 const TopUp: React.FC = () => {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   return (
-    <div className="min-h-screen bg-slate-50 py-20 px-6">
+    <div className="min-h-screen bg-slate-50">
+      <Navbar />
+      <div className="py-16 px-6">
       <div className="max-w-7xl mx-auto">
+        <button
+          onClick={() => navigate(-1)}
+          className="mb-6 inline-flex items-center gap-2 text-slate-600 hover:text-cyan-600 font-bold text-sm transition"
+        >
+          <ArrowLeft size={16} />
+          Back
+        </button>
         <h1 className="text-5xl font-black text-slate-900 mb-4 tracking-tighter">
           Trade‑In & Upgrade
         </h1>
@@ -54,6 +67,8 @@ const TopUp: React.FC = () => {
         onClose={() => setIsModalOpen(false)}
         user={user}
       />
+      </div>
+      <Footer />
     </div>
   );
 };

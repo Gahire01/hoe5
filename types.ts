@@ -20,6 +20,7 @@ export interface Category {
 export interface Supplier {
   name: string;
   icon: IconType;
+  color?: string;
 }
 
 export interface PaymentMethod {

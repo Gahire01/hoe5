@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Menu, X, Zap, ShoppingCart, User, LogOut, ChevronLeft } from 'lucide-react';
+import { Menu, X, Zap, ShoppingCart, User, LogOut, ArrowLeft, LayoutDashboard } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
 
@@ -31,6 +31,7 @@ const Navbar: React.FC = () => {
 
   const isActive = (path: string) =>
     path === '/' ? location.pathname === '/' : location.pathname.startsWith(path);
+  const isAdmin = user?.role === 'admin' || user?.email === 'homeofelectronics20@gmail.com';
 
   const isHome = location.pathname === '/';
 
@@ -45,27 +46,28 @@ const Navbar: React.FC = () => {
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6">
           <div className="flex items-center justify-between h-16 sm:h-18">
-            <div className="flex items-center gap-2 sm:gap-4">
-              {!isHome && (
+            <div className="flex items-center gap-4">
+              {location.pathname !== '/' && (
                 <button
                   onClick={() => navigate(-1)}
-                  className="p-2 -ml-2 text-slate-400 hover:text-white hover:bg-white/10 rounded-full transition-all"
-                  aria-label="Back"
+                  className="p-2 text-slate-300 hover:text-white hover:bg-white/10 rounded-full transition group"
                 >
-                  <ChevronLeft size={24} />
+                  <ArrowLeft size={20} className="group-hover:-translate-x-1 transition-transform" />
                 </button>
               )}
-              {/* Logo */}
-              <Link to="/" className="flex items-center gap-2 flex-shrink-0 group">
-                <img 
-                  src="/logo.png" 
-                  alt="Home of Electronics" 
-                  className="w-10 h-10 object-contain group-hover:scale-110 transition-transform shrink-0" 
-                />
-                <span className="text-white font-black text-sm sm:text-lg tracking-tight leading-none truncate max-w-[120px] sm:max-w-none">
-                  Home<span className="text-cyan-400">of</span>Electronics
-                </span>
-              </Link>
+              <Link to="/" className="flex items-center gap-3 group">
+              <div className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center p-1 shadow-lg group-hover:scale-105 transition-transform border border-slate-100">
+                <img src="/logo.png" alt="HOE" className="w-full h-full object-contain" />
+              </div>
+              <div className="hidden sm:block leading-none">
+                <h1 className="text-xl font-black tracking-tighter text-white">
+                  HOME<span className="text-cyan-400">OF</span>ELECTRONICS
+                </h1>
+                <p className="text-[7px] text-slate-400 tracking-[0.4em] uppercase font-black mt-0.5">
+                  The Tech Authority
+                </p>
+              </div>
+            </Link>
             </div>
 
             {/* Desktop Links */}
@@ -117,18 +119,21 @@ const Navbar: React.FC = () => {
                       {user.name}
                     </span>
                   </div>
-                  <Link
-                    to="/admin"
-                    className="text-xs font-bold text-slate-900 bg-cyan-400 px-3 py-1.5 rounded-lg hover:bg-cyan-300 transition shrink-0"
-                  >
-                    Admin
-                  </Link>
+                  {isAdmin && !isActive('/admin') && (
+                    <Link
+                      to="/admin"
+                      className="text-xs font-bold text-slate-900 bg-cyan-400 px-3 py-1.5 rounded-lg hover:bg-cyan-300 transition shrink-0 inline-flex items-center gap-1.5"
+                    >
+                      <LayoutDashboard size={14} />
+                      Dashboard
+                    </Link>
+                  )}
                   <button
                     onClick={logout}
-                    className="p-2 text-slate-400 hover:text-red-400 hover:bg-red-400/10 rounded-lg transition-all shrink-0"
+                    className="p-2 text-slate-400 hover:text-cyan-400 hover:bg-white/10 rounded-xl transition-all"
                     title="Logout"
                   >
-                    <LogOut size={16} />
+                    <LogOut size={18} />
                   </button>
                 </div>
               ) : (
@@ -221,7 +226,7 @@ const Navbar: React.FC = () => {
               </Link>
             ))}
 
-            {user?.role === 'admin' && (
+            {isAdmin && (
               <Link
                 to="/admin"
                 className={`flex items-center gap-3 px-4 py-3 rounded-xl font-semibold text-sm transition-all ${

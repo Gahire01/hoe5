@@ -15,6 +15,7 @@ import Affiliate from './pages/Affiliate';
 import AuthModal from './components/AuthModal';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { CartProvider } from './context/CartContext';
+import { Toaster } from 'react-hot-toast';
 
 const AppContent: React.FC = () => {
   const { isAuthModalOpen, closeAuthModal } = useAuth();
@@ -36,6 +37,7 @@ const AppContent: React.FC = () => {
         <Route path="/affiliate" element={<Affiliate />} />
       </Routes>
       <AuthModal isOpen={isAuthModalOpen} onClose={closeAuthModal} />
+      <Toaster position="top-right" />
     </BrowserRouter>
   );
 };

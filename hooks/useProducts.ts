@@ -3,6 +3,7 @@ import { supabase } from '../supabase';
 import { Product } from '../types';
 
 export function useProducts() {
+  const CACHE_KEY = 'hoe-products-cache-v1';
   const [products, setProducts] = useState<Product[]>([]);
   const [loading,  setLoading ] = useState(true);
   const [error,    setError   ] = useState<string | null>(null);
@@ -33,12 +34,22 @@ export function useProducts() {
     try {
       setLoading(true);
       setError(null);
+      const cached = sessionStorage.getItem(CACHE_KEY);
+      if (cached) {
+        const parsed = JSON.parse(cached) as Product[];
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          setProducts(parsed);
+          setLoading(false);
+        }
+      }
       const { data, error: dbErr } = await supabase
         .from('products')
         .select('*')
         .order('created_at', { ascending: false });
       if (dbErr) throw dbErr;
-      setProducts((data as any[]).map(mapFromDB) ?? []);
+      const mapped = (data as any[]).map(mapFromDB) ?? [];
+      setProducts(mapped);
+      sessionStorage.setItem(CACHE_KEY, JSON.stringify(mapped));
     } catch (e: any) {
       setError(e?.message ?? 'Failed to load products');
     } finally {
@@ -53,7 +64,11 @@ export function useProducts() {
     const { data, error } = await supabase.from('products').insert([dbPayload]).select().single();
     if (error) throw error;
     const newProduct = mapFromDB(data);
-    setProducts(prev => [newProduct, ...prev]);
+    setProducts(prev => {
+      const next = [newProduct, ...prev];
+      sessionStorage.setItem(CACHE_KEY, JSON.stringify(next));
+      return next;
+    });
     return newProduct;
   }, []);
 
@@ -62,14 +77,22 @@ export function useProducts() {
     const { data, error } = await supabase.from('products').update(dbPayload).eq('id', id).select().single();
     if (error) throw error;
     const updatedProduct = mapFromDB(data);
-    setProducts(prev => prev.map(p => p.id === id ? updatedProduct : p));
+    setProducts(prev => {
+      const next = prev.map(p => p.id === id ? updatedProduct : p);
+      sessionStorage.setItem(CACHE_KEY, JSON.stringify(next));
+      return next;
+    });
     return updatedProduct;
   }, []);
 
   const deleteProduct = useCallback(async (id: string) => {
     const { error } = await supabase.from('products').delete().eq('id', id);
     if (error) throw error;
-    setProducts(prev => prev.filter(p => p.id !== id));
+    setProducts(prev => {
+      const next = prev.filter(p => p.id !== id);
+      sessionStorage.setItem(CACHE_KEY, JSON.stringify(next));
+      return next;
+    });
   }, []);
 
   return { products, loading, error, fetchProducts, addProduct, updateProduct, deleteProduct };

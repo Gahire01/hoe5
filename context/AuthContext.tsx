@@ -20,6 +20,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const openAuthModal = () => setIsAuthModalOpen(true);
   const closeAuthModal = () => setIsAuthModalOpen(false);
+  const isAdminUser = (email?: string | null, role?: string) =>
+    role === 'admin' || email === 'homeofelectronics20@gmail.com';
 
   useEffect(() => {
     const getSession = async () => {
@@ -30,7 +32,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           id: session.user.id,
           email: session.user.email || '',
           name: metadata.name || session.user.email?.split('@')[0] || 'User',
-          role: metadata.role === 'admin' ? 'admin' : 'user',
+          role: isAdminUser(session.user.email, metadata.role) ? 'admin' : 'user',
           avatar: metadata.avatar || metadata.avatar_url,
           phone: session.user.phone || metadata.phone,
         });
@@ -46,7 +48,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           id: session.user.id,
           email: session.user.email || '',
           name: metadata.name || session.user.email?.split('@')[0] || 'User',
-          role: metadata.role === 'admin' ? 'admin' : 'user',
+          role: isAdminUser(session.user.email, metadata.role) ? 'admin' : 'user',
           avatar: metadata.avatar || metadata.avatar_url,
           phone: session.user.phone || metadata.phone,
         });

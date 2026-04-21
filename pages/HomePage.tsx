@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import Navbar from '../components/Navbar';
 import Hero from '../components/Hero';
 import ProductCard from '../components/ProductCard';
-import SmartAssistant from '../components/SmartAssistant';
+import { AIChatBot } from '../components/AIChatBot';
 import WhatsAppButton from '../components/WhatsAppButton';
 import Footer from '../components/Footer';
 import CartDrawer from '../components/CartDrawer';
@@ -82,7 +82,7 @@ const HomePage: React.FC = () => {
 
       {showFloatingButtons && (
         <>
-          <SmartAssistant />
+          <AIChatBot />
           <WhatsAppButton />
         </>
       )}

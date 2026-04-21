@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { X, Upload, AlertCircle, Loader2, CheckCircle, ImagePlus, User } from 'lucide-react';
+import { X, Upload, AlertCircle, Loader2, CheckCircle, ImagePlus, User, ArrowLeft } from 'lucide-react';
 import { supabase } from '../supabase';
 import { uploadFileToSupabase, validateImageFile } from '../storageService';
 import { CONTACT_INFO } from '../constants';
@@ -60,8 +60,13 @@ const TopUpModal: React.FC<Props> = ({ isOpen, onClose, user }) => {
       openAuthModal?.();
       return;
     }
-    if (!phone.trim()) {
+    const normalizedPhone = phone.replace(/\s+/g, '');
+    if (!normalizedPhone) {
       setErrorMsg('Please enter your phone number.');
+      return;
+    }
+    if (!/^\+?\d{9,15}$/.test(normalizedPhone)) {
+      setErrorMsg('Please enter a valid phone number.');
       return;
     }
     if (!phoneModel.trim()) {
@@ -91,6 +96,21 @@ const TopUpModal: React.FC<Props> = ({ isOpen, onClose, user }) => {
         imageUrls.push(url);
       }
 
+      // ─── SAVE TO SUPABASE ────────────────────────────────────────────────────────
+      const { error: dbError } = await supabase
+        .from('topup_requests')
+        .insert([{
+          user_id: authUser.id,
+          user_name: authUser.name,
+          phone: normalizedPhone,
+          amount: 0, // Not applicable for trade-ins, or we can use it for estimated value
+          images: imageUrls,
+          message: `Trade-in request for model: ${phoneModel.trim()}`,
+          status: 'pending'
+        }]);
+
+      if (dbError) throw dbError;
+
       setProgress(100);
 
       const imageLines = imageUrls
@@ -100,8 +120,9 @@ const TopUpModal: React.FC<Props> = ({ isOpen, onClose, user }) => {
       const waText = [
         '🔔 *NEW TRADE‑IN REQUEST*',
         '',
+        `🧾 Sent by customer from website: YES`,
         `👤 Name: ${authUser.name ?? 'Guest'}`,
-        `📞 Phone: ${phone.trim()}`,
+        `📞 Phone: ${normalizedPhone}`,
         `📱 Device Model: ${phoneModel.trim()}`,
         '',
         `📸 Device Photos (${imageUrls.length}):`,
@@ -135,9 +156,19 @@ const TopUpModal: React.FC<Props> = ({ isOpen, onClose, user }) => {
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/60 backdrop-blur-sm">
       <div className="bg-white rounded-t-[2.5rem] sm:rounded-[2.5rem] shadow-2xl w-full max-w-lg max-h-[95vh] sm:max-h-[90vh] overflow-y-auto">
         <div className="sticky top-0 bg-white z-10 flex items-center justify-between p-6 pb-4 border-b border-slate-100">
-          <div>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={onClose}
+              disabled={status === 'uploading'}
+              className="p-2 text-slate-500 hover:text-slate-800 hover:bg-slate-100 rounded-full transition disabled:opacity-30"
+              aria-label="Back"
+            >
+              <ArrowLeft size={18} />
+            </button>
+            <div>
             <h2 className="text-xl sm:text-2xl font-black text-slate-900">Trade‑In Request</h2>
             <p className="text-slate-400 text-xs sm:text-sm mt-0.5">Upload photos of your device</p>
+            </div>
           </div>
           <button
             onClick={onClose}

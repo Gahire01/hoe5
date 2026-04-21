@@ -39,28 +39,28 @@ export const CONTACT_INFO = {
 };
 
 export const CATEGORIES: Category[] = [
-  { id: '1', name: 'Smartphone', icon: Smartphone as any },
-  { id: '2', name: 'Accessories', icon: Headphones as any },
-  { id: '3', name: 'Audio', icon: Headphones as any },
-  { id: '4', name: 'Computer & Laptop', icon: Laptop as any },
-  { id: '5', name: 'Games & Consoles', icon: Gamepad2 as any },
-  { id: '6', name: 'Watches', icon: Watch as any },
-  { id: '7', name: 'Camera', icon: Camera as any },
+  { id: 'smartphone', name: 'Smartphone', icon: Smartphone as any },
+  { id: 'accessories', name: 'Accessories', icon: Headphones as any },
+  { id: 'audio', name: 'Audio', icon: Headphones as any },
+  { id: 'computer-laptop', name: 'Computer & Laptop', icon: Laptop as any },
+  { id: 'games-consoles', name: 'Games & Consoles', icon: Gamepad2 as any },
+  { id: 'watches', name: 'Watches', icon: Watch as any },
+  { id: 'camera', name: 'Camera', icon: Camera as any },
 ];
 
 export const SUPPLIERS: Supplier[] = [
-  { name: 'Apple', icon: FaApple },
-  { name: 'Samsung', icon: FaAndroid },
-  { name: 'Google', icon: FaGoogle },
-  { name: 'Sony', icon: FaPlaystation },
-  { name: 'Microsoft', icon: FaWindows },
-  { name: 'Xiaomi', icon: SiXiaomi },
-  { name: 'OnePlus', icon: SiOneplus },
-  { name: 'Lenovo', icon: SiLenovo },
-  { name: 'Oppo', icon: SiOppo },
-  { name: 'Vivo', icon: SiVivo },
-  { name: 'Infinix', icon: FaMobile },
-  { name: 'Tecno', icon: FaMobileAlt },
+  { name: 'Apple', icon: FaApple as any, color: 'hover:text-white' },
+  { name: 'Samsung', icon: FaAndroid as any, color: 'hover:text-blue-500' },
+  { name: 'Google', icon: FaGoogle as any, color: 'hover:text-red-500' },
+  { name: 'Sony', icon: FaPlaystation as any, color: 'hover:text-blue-600' },
+  { name: 'Microsoft', icon: FaWindows as any, color: 'hover:text-blue-400' },
+  { name: 'Xiaomi', icon: SiXiaomi as any, color: 'hover:text-orange-500' },
+  { name: 'OnePlus', icon: SiOneplus as any, color: 'hover:text-red-600' },
+  { name: 'Lenovo', icon: SiLenovo as any, color: 'hover:text-red-600' },
+  { name: 'Oppo', icon: SiOppo as any, color: 'hover:text-green-500' },
+  { name: 'Vivo', icon: SiVivo as any, color: 'hover:text-blue-400' },
+  { name: 'Infinix', icon: FaMobile as any, color: 'hover:text-green-400' },
+  { name: 'Tecno', icon: FaMobileAlt as any, color: 'hover:text-blue-500' },
 ];
 
 export const PAYMENT_METHODS: PaymentMethod[] = [

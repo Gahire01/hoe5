@@ -6,7 +6,7 @@ import ProductCard from '../components/ProductCard';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import CartDrawer from '../components/CartDrawer';
-import { Filter, X } from 'lucide-react';
+import { Filter, X, Search } from 'lucide-react';
 import { CATEGORIES } from '../constants';
 
 const ProductsPage: React.FC = () => {
@@ -16,7 +16,7 @@ const ProductsPage: React.FC = () => {
   const [selectedCategory, setSelectedCategory] = useState<string | null>(searchParams.get('category'));
   const [sortBy, setSortBy] = useState<'price-asc' | 'price-desc' | 'newest' | 'rating'>('newest');
 
-  const { products } = useProducts();
+  const { products, loading } = useProducts();
   const { cartItems, addToCart, removeFromCart, updateQuantity, isCartOpen, setIsCartOpen } = useCart();
 
   // URL sync
@@ -36,8 +36,13 @@ const ProductsPage: React.FC = () => {
   const filteredProducts = useMemo(() => {
     let filtered = [...products];
     if (selectedCategory) {
-      const cat = CATEGORIES.find(c => c.id === selectedCategory);
-      if (cat) filtered = filtered.filter(p => p.category.toLowerCase() === cat.name.toLowerCase());
+      const selected = selectedCategory.toLowerCase();
+      const cat = CATEGORIES.find(c => c.id === selected || c.name.toLowerCase() === selected);
+      if (cat) {
+        filtered = filtered.filter(p => p.category.toLowerCase() === cat.name.toLowerCase());
+      } else {
+        filtered = filtered.filter(p => p.category.toLowerCase().replace(/\s+/g, '-') === selected);
+      }
     }
     if (searchQuery) filtered = filtered.filter(p => p.name.toLowerCase().includes(searchQuery.toLowerCase()) || p.category.toLowerCase().includes(searchQuery.toLowerCase()));
     switch (sortBy) {
@@ -64,6 +69,24 @@ const ProductsPage: React.FC = () => {
         </div>
       )}
       <main className="flex-1 max-w-7xl mx-auto w-full px-4 py-12">
+        <div className="flex flex-col md:flex-row justify-between items-end gap-6 mb-12">
+          <div className="flex-1 w-full max-w-2xl">
+            <h1 className="text-4xl md:text-6xl font-black text-slate-950 tracking-tighter mb-6 uppercase">
+              Hardware <span className="text-cyan-500">Catalog</span>
+            </h1>
+            <div className="relative group">
+              <input
+                type="text"
+                placeholder="Search models, categories, or specs..."
+                value={searchQuery}
+                onChange={e => setSearchQuery(e.target.value)}
+                className="w-full bg-white border border-slate-200 rounded-2xl px-12 py-4 text-sm font-bold shadow-sm focus:ring-4 focus:ring-cyan-500/10 transition-all outline-none"
+              />
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-hover:text-cyan-500 transition-colors" size={20} />
+            </div>
+          </div>
+        </div>
+
         <div className="flex flex-col md:flex-row gap-8">
           <aside className="md:w-64 shrink-0">
             <div className="bg-white rounded-3xl p-6 shadow-md border border-slate-100 sticky top-28">
@@ -91,12 +114,37 @@ const ProductsPage: React.FC = () => {
             </div>
           </aside>
           <section className="flex-1">
-            <p className="mb-6 text-sm text-slate-500">{filteredProducts.length} product{filteredProducts.length !== 1 && 's'} found</p>
-            {filteredProducts.length === 0 ? (
-              <div className="bg-white p-12 rounded-3xl text-center"><p className="text-slate-500">No products found.</p><button onClick={clearFilters} className="mt-4 font-bold text-cyan-600 underline">Clear all filters</button></div>
+            <div className="flex justify-between items-center mb-6">
+              <p className="text-sm text-slate-500 font-bold uppercase tracking-widest">
+                {loading ? 'Scanning Database...' : `${filteredProducts.length} Units Detected`}
+              </p>
+            </div>
+            
+            {loading ? (
+            <div className="grid sm:grid-cols-2 xl:grid-cols-3 gap-6">
+                {[...Array(6)].map((_, i) => (
+                  <div key={i} className="bg-white rounded-[2rem] h-[400px] animate-pulse border border-slate-100" />
+                ))}
+              </div>
+            ) : filteredProducts.length === 0 ? (
+              <div className="bg-white p-20 rounded-[3rem] text-center border border-slate-100">
+                <div className="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-6 text-slate-300">
+                  <Search size={40} />
+                </div>
+                <p className="text-slate-500 font-black uppercase tracking-widest text-sm mb-4">No Products Found</p>
+                <button onClick={clearFilters} className="text-cyan-600 font-black text-xs uppercase tracking-widest hover:underline">Clear all filters</button>
+              </div>
             ) : (
-              <div className="grid sm:grid-cols-2 xl:grid-cols-3 gap-8">
-                {filteredProducts.map(product => <ProductCard key={product.id} product={product} onAddToCart={addToCart} isComparing={false} onToggleCompare={()=>{}} />)}
+              <div className="grid sm:grid-cols-2 xl:grid-cols-3 gap-6">
+                {filteredProducts.map(product => (
+                  <ProductCard 
+                    key={product.id} 
+                    product={product} 
+                    onAddToCart={addToCart} 
+                    isComparing={false} 
+                    onToggleCompare={()=>{}} 
+                  />
+                ))}
               </div>
             )}
           </section>

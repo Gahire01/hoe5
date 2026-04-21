@@ -1,20 +1,37 @@
-<div align="center">
-<img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
-</div>
+# Home of Electronics - Web App
 
-# Run and deploy your AI Studio app
+Production-ready React + Vite storefront for Home of Electronics.
 
-This contains everything you need to run your app locally.
+## Tech Stack
 
-View your app in AI Studio: https://ai.studio/apps/661e6441-3970-46e4-af67-34a0bf3780a9
+- React + TypeScript + Vite
+- Tailwind CSS
+- Supabase (auth, database, storage)
+- Gemini AI assistant
 
-## Run Locally
-
-**Prerequisites:**  Node.js
-
+## Local Setup
 
 1. Install dependencies:
-   `npm install`
-2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
-3. Run the app:
-   `npm run dev`
+   - `npm install`
+2. Create env file:
+   - copy `.env.example` to `.env`
+3. Start dev server:
+   - `npm run dev`
+4. Build production:
+   - `npm run build`
+
+## Main Routes
+
+- `/` - Home
+- `/products` - Catalog
+- `/top-up` - Trade-in / Top-up request
+- `/admin` - Admin dashboard
+- `/tech-guides` - Tech guides
+- `/store-locator` - Store location
+- `/support` - Support
+
+## Deployment
+
+Full deployment + SEO + Google setup docs are in:
+
+- `DEPLOYMENT.md`
