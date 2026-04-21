@@ -1,39 +1,20 @@
-# ⚡ Home of Electronics – The Tech Authority
+<div align="center">
+<img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
+</div>
 
-The premium digital storefront for high-end technology in Rwanda. Built for speed, precision, and professional hardware procurement.
+# Run and deploy your AI Studio app
 
-## 🔐 Administrative Access
-- **Email:** `homeofelectronics20@gmail.com`
-- **Password:** `234456`
+This contains everything you need to run your app locally.
 
-## 🚀 Core Features
-- **Smart Consultant** – Intelligent hardware guidance and tech support.
-- **Dynamic Inventory** – Real-time catalog management for premium devices.
-- **Enterprise Search** – Instant filtering by category, brand, or technical specifications.
-- **Unified Checkout** – Seamless cart management with direct WhatsApp integration.
-- **Hardware Comparison** – Side-by-side technical analysis of up to 3 units.
-- **Mobile Infrastructure** – Fully responsive architecture for all modern devices.
-- **Command Center** – Secure administrative panel for inventory and personnel management.
+View your app in AI Studio: https://ai.studio/apps/661e6441-3970-46e4-af67-34a0bf3780a9
 
-## 🛠️ Technology Stack
-- **Framework**: React 19 + TypeScript
-- **Build Engine**: Vite 6
-- **Styling Layer**: Tailwind CSS v4
-- **Intelligence**: Google Gemini Engine
-- **Icons**: Lucide & React Icons
-- **Backend**: Supabase (Auth, DB, Storage)
+## Run Locally
 
-## 📦 Deployment Guide
-For complete hosting instructions and environment variable documentation, please refer to:
-👉 [**HOSTING_GUIDE.md**](./HOSTING_GUIDE.md)
+**Prerequisites:**  Node.js
 
-For database and storage initialization:
-👉 [**SUPABASE_SETUP.md**](./SUPABASE_SETUP.md)
 
-## 🏗️ Local Development
-1. Clone the repository.
-2. Run `npm install` to synchronize dependencies.
-3. Configure your `.env` variables (see [HOSTING_GUIDE.md](./HOSTING_GUIDE.md)).
-4. Execute `npm run dev` to launch the local environment.
-
-Developed for **Home of Electronics, Kigali**.
+1. Install dependencies:
+   `npm install`
+2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
+3. Run the app:
+   `npm run dev`
